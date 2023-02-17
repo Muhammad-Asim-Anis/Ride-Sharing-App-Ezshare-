@@ -95,7 +95,7 @@ class _PhoneAuthenticateScreenState extends State<PhoneAuthenticateScreen> {
                       phoneNumber: phonenum.text,
                       verificationCompleted: (_) {},
                       verificationFailed: (error) {
-                        print(error);
+                       
                       },
                       codeSent: (verificationId, forceResendingToken) {
                         

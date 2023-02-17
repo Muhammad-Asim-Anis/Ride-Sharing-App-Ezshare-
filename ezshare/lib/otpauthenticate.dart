@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ezshare/Customerscreens/screens/cutomer_home.dart';
 import 'package:ezshare/login.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -21,11 +23,14 @@ class OtpauthenticatePage extends StatefulWidget {
 }
 
 class _OtpauthenticatePagewidget extends State<OtpauthenticatePage> {
+  CollectionReference users = FirebaseFirestore.instance.collection("Users");
   FirebaseAuth auth = FirebaseAuth.instance;
   static const maxseconds = 60;
   int timer = maxseconds;
   Timer? time;
   TextEditingController codenum = TextEditingController();
+  int count = 0;
+  String userid = "",username = "";
   @override
   void initState() {
     super.initState();
@@ -43,6 +48,25 @@ class _OtpauthenticatePagewidget extends State<OtpauthenticatePage> {
         }
       });
     });
+  }
+
+  Future<int> getUserAuthenticate(String number) async {
+    AggregateQuery count = users
+        .where("id", isEqualTo: number)
+        .count();
+    AggregateQuerySnapshot snap = await count.get();
+
+    return snap.count;
+  }
+
+   getUserAuthenticatedetails(String number) async {
+    QuerySnapshot detail = await users
+        .where("id", isEqualTo: number)
+        .get();
+    for (var element in detail.docs) {
+      userid = element.id;
+      username = element["username"];
+    }
   }
 
   @override
@@ -135,9 +159,7 @@ class _OtpauthenticatePagewidget extends State<OtpauthenticatePage> {
                       forceResendingToken: int.parse(widget.otpcode),
                       phoneNumber: widget.phonenum.toString(),
                       verificationCompleted: (_) {},
-                      verificationFailed: (error) {
-                        print(error);
-                      },
+                      verificationFailed: (error) {},
                       codeSent: (verificationId, forceResendingToken) {
                         Navigator.push(
                             context,
@@ -174,14 +196,35 @@ class _OtpauthenticatePagewidget extends State<OtpauthenticatePage> {
               ),
               InkWell(
                   onTap: () async {
-                    print(codenum.text);
                     if (codenum.text != "") {
+                      await getUserAuthenticate(widget.phonenum).then((value) => count = value);
+                                 
                       final credential = PhoneAuthProvider.credential(
                           verificationId: widget.verificationId,
                           smsCode: codenum.text);
                       LoginPage.credential = credential;
                       // await auth.signInWithCredential(credential);
+                      if(count == 1)
+                      {
+                        await getUserAuthenticatedetails(widget.phonenum);
 
+                        await FirebaseAuth.instance
+                          .signInWithCredential(credential);
+
+                         // ignore: use_build_context_synchronously
+                         await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => customerhome(
+                              userid: userid,
+                              username: username,
+                            ),
+                          ));
+                      }
+                      else if(count == 0)
+                      {
+
+                      // ignore: use_build_context_synchronously
                       await Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -189,6 +232,7 @@ class _OtpauthenticatePagewidget extends State<OtpauthenticatePage> {
                               usernumber: widget.phonenum,
                             ),
                           ));
+                      } 
                     }
                   },
                   hoverColor: Colors.white,

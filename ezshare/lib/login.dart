@@ -20,21 +20,18 @@ class _LoginPageState extends State<LoginPage> {
   int usercount = 0;
   String userid = "";
 
-  Future<int> getUserAuthenticate(String number, String username) async {
-    AggregateQuery count = users
-        .where("id", isEqualTo: number)
-        .where("username", isEqualTo: username)
-        .count();
-    AggregateQuerySnapshot snap = await count.get();
+  // Future<int> getUserAuthenticate(String number, String username) async {
+  //   AggregateQuery count = users
+  //       .where("id", isEqualTo: number)
+  //       .where("username", isEqualTo: username)
+  //       .count();
+  //   AggregateQuerySnapshot snap = await count.get();
 
-    return snap.count;
-  }
+  //   return snap.count;
+  // }
 
-  getUserAuthenticatedetails(String number, String name) async {
-    QuerySnapshot detail = await users
-        .where("id", isEqualTo: number)
-        .where("username", isEqualTo: name)
-        .get();
+  getUserAuthenticatedetails(String number) async {
+    QuerySnapshot detail = await users.where("id", isEqualTo: number).get();
     for (var element in detail.docs) {
       userid = element.id;
     }
@@ -42,7 +39,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    print(widget.usernumber);
     return Scaffold(
       body: SingleChildScrollView(
         child: Center(
@@ -96,33 +92,15 @@ class _LoginPageState extends State<LoginPage> {
               ),
               InkWell(
                   onTap: () async {
-                    await getUserAuthenticate(
-                            widget.usernumber, username.text.toString())
-                        .then((value) => usercount = value);
-                    await getUserAuthenticatedetails(
-                        widget.usernumber, username.text.toString());
-
-                    if (usercount == 1) {
+                    if (username.text != "") {
                       await FirebaseAuth.instance
                           .signInWithCredential(LoginPage.credential!);
-
-                      // ignore: use_build_context_synchronously
-                      await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SuccessPage(
-                              userid: userid,
-                              username: username.text,
-                            ),
-                          ));
-                    } else if (usercount == 0 && username.text != "") {
                       await users.add({
                         'id': widget.usernumber.toString(),
                         'username': username.text.toString()
                       });
+                      await getUserAuthenticatedetails(widget.usernumber);
 
-                      await FirebaseAuth.instance
-                          .signInWithCredential(LoginPage.credential!);
                       // ignore: use_build_context_synchronously
                       await Navigator.push(
                           context,
