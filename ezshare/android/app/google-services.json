@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "990336977881",
+    "project_id": "ezshare-1a98f",
+    "storage_bucket": "ezshare-1a98f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:990336977881:android:c9a353d7d50f631c5027c8",
+        "android_client_info": {
+          "package_name": "com.example.ezshare"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "990336977881-9jnsae4ifeufb8qn9t4ucg2fiebu3jo7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.ezshare",
+            "certificate_hash": "0765e3c6272adb837fa5d9577b76ae41a0a05b1a"
+          }
+        },
+        {
+          "client_id": "990336977881-m2h523ohcul5rhpaqo1aa7q6tih0mfe2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2mk7oJVnhriS4iXHVBYeC0inBqwukrJ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "990336977881-m2h523ohcul5rhpaqo1aa7q6tih0mfe2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
