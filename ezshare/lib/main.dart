@@ -1,13 +1,7 @@
-import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ezshare/Customerscreens/screens/cutomer_home.dart';
 import 'package:ezshare/Providers/authenticationprovider.dart';
 import 'package:ezshare/Providers/messageprovider.dart';
 import 'package:ezshare/Providers/ridecreateprovider.dart';
 import 'package:ezshare/aftersplashscreen.dart';
-import 'package:ezshare/phoneauthenticate.dart';
-import 'package:ezshare/successlogin.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -37,9 +31,7 @@ class MyApp extends StatelessWidget {
         title: 'Ezshare',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(),
-        home: const SplashScreen(
-          title: '',
-        ),
+        home: const SplashScreen(title: '',),
       ),
     );
   }
@@ -63,7 +55,6 @@ class _SplashScreenState extends State<SplashScreen> {
      
   }
 
-  
 
   @override
   Widget build(BuildContext context) {

@@ -1,52 +1,60 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezshare/Providers/ridecreateprovider.dart';
+import 'package:ezshare/Riderscreens/screens/riderdestination.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 class RiderRiderCreateInfoCard extends StatefulWidget {
-   final String userid;
+  final String userid;
   final String username;
-  const RiderRiderCreateInfoCard({super.key, required this.userid, required this.username});
+  
+  const RiderRiderCreateInfoCard(
+      {super.key, required this.userid, required this.username,});
 
   @override
-  State<RiderRiderCreateInfoCard> createState() => _RiderRiderCreateInfoCardState();
+  State<RiderRiderCreateInfoCard> createState() =>
+      _RiderRiderCreateInfoCardState();
 }
 
 class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
-   CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
- riderridedetailsadd(String vehiclename,String vehiclenumber,String isVehicle) async
-  {
-     await rides.add({
+  bool setLoading = false;
+  CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
+  riderridedetailsadd(
+      String vehiclename, String vehiclenumber, String isVehicle,String source,String destination) async {
+    await rides.add({
       "Ridername": widget.username,
       "Riderid": widget.userid,
       "Time": "30 min",
       "Distance": "12Km",
       "Vehicle": isVehicle,
-      "Seats": count,
+      "Seats": count, 
       "VehicleName": vehiclename,
       "VehicleNumber": vehiclenumber,
       "SelectedDate": formattedDate,
-      "SelectedTime": selectedtime,
-       
-     });
+      "SelectedTime": selectedtime, 
+      "SourceLocation": source,
+      "DestinationLocation": destination,
+    });
   }
-   TextEditingController vehiclename = TextEditingController();
+
+  TextEditingController vehiclename = TextEditingController();
   TextEditingController vehiclenumber = TextEditingController();
   int count = 1;
-   DateTime? pickedDate;
+  DateTime? pickedDate;
   String formattedDate = "";
-  TimeOfDay? time; 
+  TimeOfDay? time;
   String selectedtime = "";
   @override
   Widget build(BuildContext context) {
-     final ridecreateprovider = Provider.of<RideCreateProvider>(context);
+    final ridecreateprovider = Provider.of<RideCreateProvider>(context);
     return DraggableScrollableSheet(
-      initialChildSize: (ridecreateprovider.isVehicle.isEmpty) ? .4 : .9,
+      initialChildSize: (ridecreateprovider.isVehicle.isEmpty) ? .4 : .6,
       minChildSize: .1,
-      maxChildSize: .9,
+      maxChildSize: .6,
       expand: false,
       builder: (context, scrollController) {
         return Container(
@@ -77,7 +85,7 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                           width: 10,
                         ),
                         Text(
-                          "Saddar, Karachi",
+                          ridecreateprovider.sourcelocation,
                           style: GoogleFonts.poppins(color: Colors.white),
                         )
                       ],
@@ -96,7 +104,7 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                           width: 10,
                         ),
                         Text(
-                          "Agha Khan University Hospital",
+                          ridecreateprovider.destinationlocation,
                           style: GoogleFonts.poppins(color: Colors.white),
                         )
                       ],
@@ -154,7 +162,10 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                       hoverColor: Colors.white,
                       child: Container(
                           margin: EdgeInsets.only(
-                              top: 20, right: (ridecreateprovider.isVehicle.isEmpty) ? 80 : 0),
+                              top: 20,
+                              right: (ridecreateprovider.isVehicle.isEmpty)
+                                  ? 80
+                                  : 0),
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: Colors.blue, width: 1)),
@@ -189,13 +200,15 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                                               bottomLeft: Radius.circular(4))),
                                       child: InkWell(
                                         onTap: () {
-                                          if (ridecreateprovider.isVehicle.contains("Bike")) {
+                                          if (ridecreateprovider.isVehicle
+                                              .contains("Bike")) {
                                             setState(() {
                                               if (count < 1) {
                                                 count++;
                                               }
                                             });
-                                          } else if (ridecreateprovider.isVehicle
+                                          } else if (ridecreateprovider
+                                              .isVehicle
                                               .contains("Car")) {
                                             setState(() {
                                               if (count < 3) {
@@ -203,7 +216,8 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                                               }
                                             });
                                           }
-                                          if (ridecreateprovider.isVehicle.contains("SUV")) {
+                                          if (ridecreateprovider.isVehicle
+                                              .contains("SUV")) {
                                             setState(() {
                                               if (count < 5) {
                                                 count++;
@@ -281,6 +295,68 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                           width: 120,
                           height: 24,
                           child: TextField(
+                            onTap: () {
+                              showModalBottomSheet( shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(
+                                                      top:
+                                                          Radius.circular(10))),
+                                isScrollControlled: true,
+                                context: context,
+                                builder: (context) {
+                                  return SizedBox(
+                                    height: 400,
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          decoration: const BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.vertical(
+                                                      top:
+                                                          Radius.circular(10))),
+                                          padding: const EdgeInsets.all(5.0),
+                                          child: TextField(
+                                            controller: vehiclename,
+                                            maxLines: null,
+                                            autofocus: true,
+                                            textAlign: TextAlign.center,
+                                            decoration: InputDecoration(
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 1),
+                                              hintText: "Vehicle Name",
+                                              hintStyle: GoogleFonts.poppins(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w600),
+                                              border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5.0),
+                                                  borderSide: BorderSide.none),
+                                              filled: true,
+                                              fillColor: const Color.fromARGB(
+                                                  255, 237, 237, 237),
+                                              focusedBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10.0),
+                                                  borderSide: BorderSide.none),
+                                            ),
+                                          ),
+                                        ),
+                                        InkWell(
+                                            onTap: () {
+                                              FocusManager.instance.primaryFocus
+                                                  ?.unfocus();
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text("Close"))
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                              FocusManager.instance.primaryFocus?.unfocus();
+                            },
+                            autofocus: false,
                             controller: vehiclename,
                             textAlign: TextAlign.center,
                             decoration: InputDecoration(
@@ -305,6 +381,67 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                           width: 120,
                           height: 24,
                           child: TextField(
+                            onTap: () {
+                              showModalBottomSheet( shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(
+                                                      top:
+                                                          Radius.circular(10))),
+                                isScrollControlled: true,
+                                context: context,
+                                builder: (context) {
+                                  return SizedBox(
+                                    height: 400,
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          decoration: const BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.vertical(
+                                                      top:
+                                                          Radius.circular(10))),
+                                          padding: const EdgeInsets.all(5.0),
+                                          child: TextField(
+                                            controller: vehiclenumber,
+                                            maxLines: null,
+                                            autofocus: true,
+                                            textAlign: TextAlign.center,
+                                            decoration: InputDecoration(
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 1),
+                                              hintText: "Vehicle Number",
+                                              hintStyle: GoogleFonts.poppins(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w600),
+                                              border: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          5.0),
+                                                  borderSide: BorderSide.none),
+                                              filled: true,
+                                              fillColor: const Color.fromARGB(
+                                                  255, 237, 237, 237),
+                                              focusedBorder: OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10.0),
+                                                  borderSide: BorderSide.none),
+                                            ),
+                                          ),
+                                        ),
+                                        InkWell(
+                                            onTap: () {
+                                              FocusManager.instance.primaryFocus
+                                                  ?.unfocus();
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text("Close"))
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                              FocusManager.instance.primaryFocus?.unfocus();
+                            },
                             controller: vehiclenumber,
                             textAlign: TextAlign.center,
                             decoration: InputDecoration(
@@ -343,19 +480,20 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                                 firstDate: DateTime(
                                     2000), //DateTime.now() - not to allow to choose before today.
                                 lastDate: DateTime(2101));
-                              if(pickedDate != null)
-                              {
-                                setState(() {
-                                  
-                                 formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate!);
-                                });
-                                FocusManager.instance.primaryFocus?.unfocus();
-                              }
+                            if (pickedDate != null) {
+                              setState(() {
+                                formattedDate = DateFormat('yyyy-MM-dd')
+                                    .format(pickedDate!);
+                              });
+                              FocusManager.instance.primaryFocus?.unfocus();
+                            }
                           },
                           child: Container(
                               margin: const EdgeInsets.only(top: 10, right: 0),
                               decoration: BoxDecoration(
-                                  color:  (formattedDate.isNotEmpty)? Colors.white : Colors.blueAccent,
+                                  color: (formattedDate.isNotEmpty)
+                                      ? Colors.white
+                                      : Colors.blueAccent,
                                   borderRadius: BorderRadius.circular(5),
                                   border:
                                       Border.all(color: Colors.blue, width: 1)),
@@ -372,46 +510,51 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                                     : Text(
                                         formattedDate,
                                         style: GoogleFonts.poppins(
-                                            fontSize: 10, color: Colors.blueAccent),
+                                            fontSize: 10,
+                                            color: Colors.blueAccent),
                                         textAlign: TextAlign.center,
                                       ),
                               )),
                         ),
                         InkWell(
-                          onTap: ()async{
-                                
-                             time = await showTimePicker(
-                                context: context, initialTime: TimeOfDay.now(),
-                                );
-        
-                                setState(() {
-                                  selectedtime =time!.format(context);
-                                });
-                                
-                               
-                                FocusManager.instance.primaryFocus?.unfocus();
+                          onTap: () async {
+                            time = await showTimePicker(
+                              context: context,
+                              initialTime: TimeOfDay.now(),
+                            );
+
+                            setState(() {
+                              selectedtime = time!.format(context);
+                            });
+
+                            FocusManager.instance.primaryFocus?.unfocus();
                           },
                           child: Container(
                               margin: const EdgeInsets.only(top: 10, right: 0),
                               decoration: BoxDecoration(
-                                  color: (selectedtime.isNotEmpty)? Colors.white : Colors.blueAccent,
+                                  color: (selectedtime.isNotEmpty)
+                                      ? Colors.white
+                                      : Colors.blueAccent,
                                   borderRadius: BorderRadius.circular(5),
                                   border:
                                       Border.all(color: Colors.blue, width: 1)),
                               width: 75,
                               height: 45,
                               child: Center(
-                                child: (selectedtime.isEmpty)? Text(
-                                  "Select Time",
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 10, color: Colors.white),
-                                  textAlign: TextAlign.center,
-                                ) : Text(
-                                  selectedtime,
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 10, color: Colors.blueAccent),
-                                  textAlign: TextAlign.center,
-                                ),
+                                child: (selectedtime.isEmpty)
+                                    ? Text(
+                                        "Select Time",
+                                        style: GoogleFonts.poppins(
+                                            fontSize: 10, color: Colors.white),
+                                        textAlign: TextAlign.center,
+                                      )
+                                    : Text(
+                                        selectedtime,
+                                        style: GoogleFonts.poppins(
+                                            fontSize: 10,
+                                            color: Colors.blueAccent),
+                                        textAlign: TextAlign.center,
+                                      ),
                               )),
                         )
                       ],
@@ -422,13 +565,19 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
               ),
               (ridecreateprovider.isVehicle.isNotEmpty)
                   ? InkWell(
-                    onTap: () async {
-                      // await riderridedetailsadd(vehiclename.text,vehiclenumber.text,ridecreateprovider.isVehicle);
-                      // ignore: use_build_context_synchronously
-                  //     Navigator.push(context, PageTransition(type: PageTransitionType.rightToLeftWithFade, child:  
-                  // RiderDestinationSetScreen(
-                  //  userid: widget.userid, username: widget.username,)  ));
-                    },
+                      onTap: () async  { setState(() {
+                        setLoading = true;
+                      }); 
+                        await riderridedetailsadd(vehiclename.text,vehiclenumber.text,ridecreateprovider.isVehicle,ridecreateprovider.sourcelocation,ridecreateprovider.destinationlocation);
+                         setState(() {
+                           
+                         setLoading = false;
+                         });
+                        // ignore: use_build_context_synchronously
+                            Navigator.push(context, PageTransition(type: PageTransitionType.rightToLeftWithFade, child:
+                        RiderDestinationSetScreen(
+                         userid: widget.userid, username: widget.username,)  ));
+                      },
                       child: Container(
                           margin: const EdgeInsets.only(top: 10, right: 0),
                           decoration: BoxDecoration(
@@ -438,7 +587,7 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                           width: 256,
                           height: 44,
                           child: Center(
-                            child: Text(
+                            child: (setLoading)? const CircularProgressIndicator(color: Colors.white) : Text(
                               "Create Ride",
                               style: GoogleFonts.poppins(
                                   fontSize: 13, color: Colors.white),

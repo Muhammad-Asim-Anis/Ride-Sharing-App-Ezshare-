@@ -45,7 +45,7 @@ class _RiderRideBookingDeatilsScreenState
                     endpoint: "sadar"),
           );
       }, ),
-      drawer: const HomeDrawer(username: '', userid: ''),
+      drawer:  HomeDrawer(username: widget.username, userid: widget.userid),
     );
   }
 }

@@ -1,6 +1,9 @@
 import 'package:ezshare/Customerscreens/screens/cutomer_home.dart';
 import 'package:ezshare/Riderscreens/screens/riderdestination.dart';
+import 'package:ezshare/aftersplashscreen.dart';
+import 'package:ezshare/homedrawer.dart';
 import 'package:ezshare/phoneauthenticate.dart';
+import 'package:ezshare/profilepage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +64,7 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
                       Stack(
                         alignment: Alignment.center,
                         children: [
-                          Container(
+                         (AfterSplashScreenLoader.downloadurl.isEmpty) ? Container(
                             padding: EdgeInsets.zero,
                             decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(100)),
@@ -70,9 +73,26 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
                               color: Colors.blue,
                               size: 200,
                             ),
-                          ),
+                          ) : Container(
+                    height: 150,
+                    width: 150,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                    ),
+                    child:  CircleAvatar(
+                      backgroundImage:  NetworkImage( 
+                       
+                        AfterSplashScreenLoader.downloadurl
+                      ),
+                    )) ,
                           InkWell(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>  ProfilePageScreen(userid: widget.userid, username: widget.username,),
+                        ));
+                            },
                             child: Container(
                               padding: EdgeInsets.zero,
                               margin:
@@ -156,7 +176,7 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
             child: ListTile(
                 onTap: () async {
                   
-
+                    HomeDrawer.currentroute = "Ridermainscreen";
                   
                   Navigator.push(
                       context,

@@ -1,9 +1,10 @@
 import 'package:ezshare/Customerscreens/screens/customerhomedrawer.dart';
 import 'package:ezshare/Customerscreens/screens/first.dart';
-
+import 'package:ezshare/Providers/authenticationprovider.dart';
 import 'package:ezshare/phoneauthenticate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 // ignore: camel_case_types
 class customerhome extends StatefulWidget {
@@ -22,9 +23,11 @@ class _customerhomeState extends State<customerhome> {
   void initState() {
     
     super.initState();
+    
     firebaseauthcheck();
+    
   }
-
+ 
 
    TabBar get _tabbar => const TabBar(
         labelColor: Color.fromARGB(255, 0, 157, 207), 
@@ -46,6 +49,13 @@ class _customerhomeState extends State<customerhome> {
           )
         ],
       );
+loaddata(BuildContext context)
+{
+   final authprovider = Provider.of<AuthenticationProvider>(context);
+   authprovider.setuserID(widget.userid);
+   authprovider.setuserName(widget.username);
+   
+}      
 firebaseauthcheck()
 {
     FirebaseAuth.instance.authStateChanges().listen((User? user) {

@@ -1,12 +1,13 @@
-
 import 'package:ezshare/Providers/ridecreateprovider.dart';
 import 'package:ezshare/Riderscreens/screens/riderdestinationserach.dart';
 import 'package:ezshare/Riderscreens/widgets/riderridecreateinfocard.dart';
 import 'package:ezshare/Riderscreens/widgets/riderrideselectinfocard.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-// import 'package:google_map_polyline_new/google_map_polyline_new.dart';
+import 'package:ezshare/Riderscreens/screens/custommarker.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
@@ -14,8 +15,18 @@ class RiderRideCreateInfoScreen extends StatefulWidget {
   final String userid;
   final String username;
   final String sourcelocation;
-  final String destinationlocation; 
-  const RiderRideCreateInfoScreen({super.key, required this.sourcelocation, required this.destinationlocation, required this.userid, required this.username});
+  final String destinationlocation;
+  final List<Location> sourcelist;
+  final List<Location> destinationlist;
+  final List<LatLng> polylines;
+  static String sourcelocat = "";
+  static String destinationlocat = ""; 
+  const RiderRideCreateInfoScreen(
+      {super.key,
+      required this.sourcelocation,
+      required this.destinationlocation,
+      required this.userid,
+      required this.username, required this.sourcelist, required this.destinationlist, required this.polylines});
 
   @override
   State<RiderRideCreateInfoScreen> createState() =>
@@ -23,31 +34,29 @@ class RiderRideCreateInfoScreen extends StatefulWidget {
 }
 
 class _RiderRideCreateInfoScreenState extends State<RiderRideCreateInfoScreen> {
- 
-  
- 
-  // List<LatLng> polylines = [];
-  // GoogleMapPolyline googleMapPolyline =
-  //     GoogleMapPolyline(apiKey: "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk");
-
-  // destinationtopolylines() async {
-  //   polylines = (await googleMapPolyline.getCoordinatesWithLocation(
-  //     origin: const LatLng(24.91638690588, 67.05699002225725),
-  //     destination: const LatLng(24.86149386345483, 67.01537192559961),
-  //     mode: RouteMode.driving,
-  //   ))!;
-  //   print(polylines);
-  // }
-
- 
+  Uint8List? markerimage, sourceimage;
+  @override
+  void initState() {
+    super.initState();
+    loadmarker();
+     
+  }
 
   
 
- 
+  loadmarker() {
+    setState(() {
+       CustomMarkerMaker()
+          .custommarkerfromasset("assets/images/Vector-blue-dot.png")
+          .then((value) => markerimage = value);
+      CustomMarkerMaker()
+          .custommarkerfromasset("assets/images/Vector-red.png")
+          .then((value) => sourceimage = value);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       extendBodyBehindAppBar: true,
       extendBody: true,
@@ -72,10 +81,17 @@ class _RiderRideCreateInfoScreenState extends State<RiderRideCreateInfoScreen> {
                   )
                 ]),
             child: IconButton(
-                onPressed: () {
-                  Navigator.push(context, PageTransition(type: PageTransitionType.rightToLeftWithFade, child:  
-                  RiderDestinationSerachScreen(
-                    userid: widget.userid, username: widget.username,)  ));
+                onPressed: () { 
+                  RiderRideCreateInfoScreen.sourcelocat = widget.sourcelocation;
+                  RiderRideCreateInfoScreen.destinationlocat = widget.destinationlocation;
+                  Navigator.push(
+                      context,
+                      PageTransition(
+                          type: PageTransitionType.rightToLeftWithFade,
+                          child: RiderDestinationSerachScreen(
+                            userid: widget.userid,
+                            username: widget.username,
+                          )));
                 },
                 icon: const Icon(
                   Icons.arrow_back_ios,
@@ -117,27 +133,44 @@ class _RiderRideCreateInfoScreenState extends State<RiderRideCreateInfoScreen> {
         ],
       ),
       body: GoogleMap(
-        initialCameraPosition: const CameraPosition(
-            target: LatLng(24.91638690588, 67.05699002225725), zoom: 14.4746),
+        initialCameraPosition:  CameraPosition(
+            target: LatLng(widget.sourcelist.last.latitude, widget.sourcelist.last.longitude), zoom: 14.4746),
         mapType: MapType.normal,
         zoomControlsEnabled: false,
+        onMapCreated: (controller) async { 
+          
+           loadmarker();
+        },
         markers: <Marker>{
-          const Marker(
-              markerId: MarkerId("1"),
-              position: LatLng(24.91638690588, 67.05699002225725),
-              infoWindow: InfoWindow(title: "Source Location")),
-             const  Marker( markerId: MarkerId("2"),
-              position: LatLng(24.902397373647943, 67.07289494395282),
-              infoWindow: InfoWindow(title: "destination Location"),)
+          Marker(
+              icon: (sourceimage == null)? BitmapDescriptor.defaultMarker:  BitmapDescriptor.fromBytes(sourceimage!),
+              markerId: const MarkerId("1"),
+              position:   LatLng(widget.sourcelist.last.latitude, widget.sourcelist.last.longitude),
+              infoWindow:  InfoWindow(title:  widget.sourcelocation)),
+          Marker(
+            markerId: const MarkerId("2"),
+            icon: (markerimage == null)? BitmapDescriptor.defaultMarker: BitmapDescriptor.fromBytes(markerimage!),
+            position:  LatLng(widget.destinationlist.last.latitude, widget.destinationlist.last.longitude),
+            infoWindow:  InfoWindow(title: widget.destinationlocation),
+          )
+        },
+        polylines: <Polyline>{
+          Polyline(
+              polylineId: const PolylineId('polyline_id'),
+              points: widget.polylines,
+              color: Colors.blueAccent,
+              width: 4)
         },
       ),
       bottomNavigationBar: Consumer<RideCreateProvider>(
-        builder: (BuildContext context, value, Widget? child) { 
+        builder: (BuildContext context, value, Widget? child) {
           return (value.isSetvehicle == false)
-            ?  RiderRiderCreateInfoCard(userid: widget.userid, username: widget.username,)
-            : const RiderRideSelectInfoCard();
-         },
-        
+              ? RiderRiderCreateInfoCard(
+                  userid: widget.userid,
+                  username: widget.username, 
+                )
+              : const RiderRideSelectInfoCard();
+        },
       ),
     );
   }

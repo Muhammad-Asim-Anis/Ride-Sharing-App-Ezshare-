@@ -1,11 +1,17 @@
 import 'dart:convert';
-
+import 'package:geocoding/geocoding.dart';
+import 'package:google_map_polyline_new/google_map_polyline_new.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:ezshare/Riderscreens/screens/riderdestination.dart';
 import 'package:ezshare/Riderscreens/screens/riderridecreateinfo.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../Providers/ridecreateprovider.dart';
 
 class RiderDestinationSerachScreen extends StatefulWidget {
   final String username;
@@ -21,25 +27,49 @@ class RiderDestinationSerachScreen extends StatefulWidget {
 class _RiderDestinationSerachScreenState
     extends State<RiderDestinationSerachScreen> {
   List<dynamic> places = [];
-  TextEditingController sourcelocation = TextEditingController();
-  TextEditingController destinationlocation = TextEditingController();
-  bool source = false,destination = false;
+  bool setloading = false;
+  TextEditingController sourcelocation =
+      TextEditingController(text: RiderRideCreateInfoScreen.sourcelocat);
+  TextEditingController destinationlocation =
+      TextEditingController(text: RiderRideCreateInfoScreen.destinationlocat);
+  bool source = false, destination = false;
+  var uuid = const Uuid();
+  String _sessiontoken = "122344";
   @override
   initState() {
     super.initState();
+    onChange();
+  }
+
+  void onChange() {
+    // ignore: unnecessary_null_comparison
+    if (_sessiontoken == null) {
+      setState(() {
+        _sessiontoken = uuid.v4();
+      });
+    }
   }
 
   placessearch(String address) async {
-    Uri url = Uri.parse(
-        "https://nominatim.openstreetmap.org/search?q=$address,karachi&format=json");
+    String placesapi = "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk";
+    String baseurl =
+        "https://maps.googleapis.com/maps/api/place/autocomplete/json";
+    String request =
+        "$baseurl?input=${address}karachi&key=$placesapi&sessiontoken=$_sessiontoken";
+
+    Uri url = Uri.parse(request);
     final response = await http.get(url);
-    setState(() {
-      places = jsonDecode(response.body);
-    });
+
+    if (response.statusCode == 200) {
+      setState(() {
+        places = jsonDecode(response.body)["predictions"];
+      });
+    } else {}
   }
 
   @override
   Widget build(BuildContext context) {
+    final ridecreateprovider = Provider.of<RideCreateProvider>(context);
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 237, 237, 237),
       appBar: AppBar(
@@ -93,6 +123,7 @@ class _RiderDestinationSerachScreenState
                     child: TextField(
                       controller: sourcelocation,
                       decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(5),
                         hintText: "Source Location",
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10.0),
@@ -113,21 +144,27 @@ class _RiderDestinationSerachScreenState
                             color: Colors.blue,
                           ),
                         ),
-                        suffixIcon: const Icon(
-                          Icons.close,
-                          color: Colors.grey,
+                        suffixIcon: InkWell(
+                          onTap: () {
+                            setState(() {
+                              sourcelocation.clear();
+                              places = [];
+                            });
+                          },
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.grey,
+                          ),
                         ),
                         fillColor: const Color.fromARGB(255, 237, 237, 237),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10.0),
                             borderSide: BorderSide.none),
                       ),
-                      onChanged: (value) {
+                      onChanged: (value) async {
                         destination = false;
                         source = true;
-                        if (sourcelocation.text.isNotEmpty) {
-                          placessearch(sourcelocation.text);
-                        }
+                        await placessearch(sourcelocation.text);
                       },
                     ),
                   ),
@@ -140,6 +177,7 @@ class _RiderDestinationSerachScreenState
                     child: TextField(
                       controller: destinationlocation,
                       decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(5),
                         hintText: "Destination Location",
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10.0),
@@ -160,21 +198,27 @@ class _RiderDestinationSerachScreenState
                             color: Colors.blue,
                           ),
                         ),
-                        suffixIcon: const Icon(
-                          Icons.close,
-                          color: Colors.grey,
+                        suffixIcon: InkWell(
+                          onTap: () {
+                            setState(() {
+                              sourcelocation.clear();
+                              places = [];
+                            });
+                          },
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.grey,
+                          ),
                         ),
                         fillColor: const Color.fromARGB(255, 237, 237, 237),
                         focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10.0),
                             borderSide: BorderSide.none),
                       ),
-                      onChanged: (value) {
+                      onChanged: (value) async {
                         source = false;
                         destination = true;
-                        if (destinationlocation.text.isNotEmpty) {
-                          placessearch(value);
-                        }
+                        await placessearch(destinationlocation.text);
                       },
                     ),
                   ),
@@ -183,7 +227,31 @@ class _RiderDestinationSerachScreenState
                   ),
                   InkWell(
                       onTap: () async {
-                        Navigator.push(
+                         List<LatLng> polylines = [];
+  GoogleMapPolyline googleMapPolyline =
+      GoogleMapPolyline(apiKey: "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk");
+      
+                        setloading = true;
+                        ridecreateprovider
+                            .setSourceLocation(sourcelocation.text.toString());
+                        ridecreateprovider.setDestinationLocation(
+                            destinationlocation.text.toString());
+                        List<Location> locationssource =
+                            await locationFromAddress(
+                                sourcelocation.text.toString());
+
+                        List<Location> locationsdestination =
+                            await locationFromAddress(
+                                destinationlocation.text.toString());
+
+                          polylines = (await googleMapPolyline.getCoordinatesWithLocation(
+        origin: LatLng(locationssource.last.latitude, locationssource.last.longitude),
+        destination: LatLng(locationsdestination.last.latitude, locationsdestination.last.longitude),
+        mode: RouteMode.driving,
+      ))!;       
+                        setloading = false;
+                        // ignore: use_build_context_synchronously
+                        await Navigator.push(
                             context,
                             PageTransition(
                                 type: PageTransitionType.rightToLeftWithFade,
@@ -192,6 +260,8 @@ class _RiderDestinationSerachScreenState
                                   sourcelocation: sourcelocation.text,
                                   userid: widget.userid,
                                   username: widget.username,
+                                  destinationlist: locationsdestination,
+                                  sourcelist: locationssource, polylines: polylines,
                                 )));
                       },
                       hoverColor: Colors.white,
@@ -203,12 +273,17 @@ class _RiderDestinationSerachScreenState
                                 border:
                                     Border.all(color: Colors.blue, width: 1)),
                             width: 200,
-                            child: Text(
-                              "Confirm",
-                              style: GoogleFonts.poppins(
-                                  fontSize: 20, color: Colors.white),
-                              textAlign: TextAlign.center,
-                            )),
+                            child: (setloading)
+                                ? const Center(
+                                    child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ))
+                                : Text(
+                                    "Confirm",
+                                    style: GoogleFonts.poppins(
+                                        fontSize: 20, color: Colors.white),
+                                    textAlign: TextAlign.center,
+                                  )),
                       ))
                 ],
               ),
@@ -226,7 +301,7 @@ class _RiderDestinationSerachScreenState
                       if (places.isEmpty) {
                         return Container();
                       }
-                      String placeaddress = places[index]["display_name"];
+                      String placeaddress = places[index]["description"];
                       var placename = placeaddress.split(',');
                       return Container(
                         margin: const EdgeInsets.all(0),
@@ -241,19 +316,15 @@ class _RiderDestinationSerachScreenState
                         ),
                         child: ListTile(
                           onTap: () {
-                            if(source == true)
-                            {
-
-                            sourcelocation.text = placename.first;
-                            }
-                            else
-                            {
+                            if (source == true) {
+                              sourcelocation.text = placename.first;
+                            } else {
                               destinationlocation.text = placename.first;
                             }
                           },
                           leading: const Icon(Icons.location_on_outlined),
                           title: Text(placename.first),
-                          subtitle: Text(places[index]["display_name"]),
+                          subtitle: Text(places[index]["description"]),
                         ),
                       );
                     },

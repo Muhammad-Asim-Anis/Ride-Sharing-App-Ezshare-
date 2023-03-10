@@ -1,8 +1,7 @@
 // ignore_for_file: file_names
 
-
 import 'package:ezshare/Riderscreens/screens/custommarker.dart';
-
+import 'package:geolocator/geolocator.dart';
 import 'package:ezshare/Riderscreens/screens/riderdestinationserach.dart';
 import 'package:ezshare/homedrawer.dart';
 import 'package:flutter/material.dart';
@@ -11,11 +10,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:flutter/services.dart';
 
-
 class RiderDestinationSetScreen extends StatefulWidget {
   final String username;
   final String userid;
-  const RiderDestinationSetScreen({super.key, required this.username, required this.userid});
+  const RiderDestinationSetScreen(
+      {super.key, required this.username, required this.userid});
 
   @override
   State<RiderDestinationSetScreen> createState() =>
@@ -27,24 +26,44 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
   TextEditingController sourcelocation = TextEditingController();
   TextEditingController destinationlocaton = TextEditingController();
   Uint8List? markerimage;
-  
+  double latitude = 24.91638690588, longitude = 67.05699002225725;
   @override
   initState() {
     super.initState();
-    
+    loaddata();
     loadmarker();
   }
-  loadmarker()
-  {
+
+  loadmarker() {
     setState(() {
-      
-    CustomMarkerMaker().custommarkerfromasset("assets/images/Vector.png").then((value) => markerimage = value);
+      CustomMarkerMaker()
+          .custommarkerfromasset("assets/images/Vector.png")
+          .then((value) => markerimage = value);
     });
   }
-   
+
+  loaddata() {
+    getusercurrentposition().then((value) async {
+      
+      setState(() {
+        latitude = value.latitude;
+        longitude = value.longitude;
+      });
+    });
+  }
+
+  Future<Position> getusercurrentposition() async {
+    await Geolocator.requestPermission()
+        .then((value) {})
+        .onError((error, stackTrace) async {
+      await Geolocator.requestPermission();
+    });
+
+    return await Geolocator.getCurrentPosition();
+  }
+
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
         key: scaffoldKey,
         extendBodyBehindAppBar: true,
@@ -55,8 +74,7 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10), color: Colors.white),
             child: IconButton(
-              onPressed: ()  {
-               
+              onPressed: () {
                 scaffoldKey.currentState!.openDrawer();
               },
               icon: const Icon(
@@ -82,7 +100,15 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
                       color: Colors.white),
                   width: 100,
                   child: InkWell(
-                    onTap: () {},
+                    onTap: () {
+                      getusercurrentposition().then((value) async {
+
+                        setState(() {
+                          latitude = value.latitude;
+                          longitude = value.longitude;
+                        });
+                      });
+                    },
                     child: Row(
                       children: [
                         const Padding(
@@ -108,22 +134,24 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
           ],
         ),
         body: GoogleMap(
-          initialCameraPosition: const CameraPosition(
-              target: LatLng(24.91638690588, 67.05699002225725), zoom: 14.4746),
+          initialCameraPosition: CameraPosition(
+              target: LatLng(latitude, longitude), zoom: 14.4746),
           mapType: MapType.normal,
-          zoomControlsEnabled: false,onMapCreated: (controller) async {
+          zoomControlsEnabled: false,
+          onMapCreated: (controller) async {
             loadmarker();
-            
           },
-         
           markers: <Marker>{
-             Marker( icon: (markerimage == null)? BitmapDescriptor.defaultMarker :BitmapDescriptor.fromBytes(markerimage!),
+            Marker(
+                icon: (markerimage == null)
+                    ? BitmapDescriptor.defaultMarker
+                    : BitmapDescriptor.fromBytes(markerimage!),
                 markerId: const MarkerId("1"),
-                position: const LatLng(24.91638690588, 67.05699002225725),
+                position: LatLng(latitude, longitude),
                 infoWindow: const InfoWindow(title: "User Location")),
           },
         ),
-        drawer: HomeDrawer(username: widget.username,userid: widget.userid),
+        drawer: HomeDrawer(username: widget.username, userid: widget.userid),
         bottomNavigationBar: DraggableScrollableSheet(
           initialChildSize: .4,
           minChildSize: .1,
@@ -153,7 +181,10 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
                             context,
                             PageTransition(
                                 type: PageTransitionType.bottomToTop,
-                                child:  RiderDestinationSerachScreen(userid: widget.userid, username: widget.username,)));
+                                child: RiderDestinationSerachScreen(
+                                  userid: widget.userid,
+                                  username: widget.username,
+                                )));
                       },
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -162,6 +193,17 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
                             width: 271,
                             height: 53,
                             child: TextField(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    PageTransition(
+                                        type: PageTransitionType.bottomToTop,
+                                        child: RiderDestinationSerachScreen(
+                                          userid: widget.userid,
+                                          username: widget.username,
+                                        )));
+                              },
+                              keyboardType: TextInputType.none,
                               controller: sourcelocation,
                               decoration: InputDecoration(
                                 hintText: "Source Location",
@@ -203,6 +245,17 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
                             width: 271,
                             height: 53,
                             child: TextField(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    PageTransition(
+                                        type: PageTransitionType.bottomToTop,
+                                        child: RiderDestinationSerachScreen(
+                                          userid: widget.userid,
+                                          username: widget.username,
+                                        )));
+                              },
+                              keyboardType: TextInputType.none,
                               controller: destinationlocaton,
                               decoration: InputDecoration(
                                 hintText: "Destination location",

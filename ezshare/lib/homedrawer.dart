@@ -1,7 +1,9 @@
 import 'package:ezshare/Customerscreens/screens/cutomer_home.dart';
 import 'package:ezshare/Riderscreens/screens/riderdestination.dart';
 import 'package:ezshare/Riderscreens/screens/riderridedetails.dart';
+import 'package:ezshare/aftersplashscreen.dart';
 import 'package:ezshare/phoneauthenticate.dart';
+import 'package:ezshare/profilepage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 class HomeDrawer extends StatefulWidget {
   final String userid;
   final String username; 
+  static String currentroute = "";
   const HomeDrawer({super.key, required this.username, required this.userid});
 
   @override
@@ -66,7 +69,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
                       Stack(
                         alignment: Alignment.center,
                         children: [
-                          Container(
+                           (AfterSplashScreenLoader.downloadurl.isEmpty) ? Container(
                             padding: EdgeInsets.zero,
                             decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(100)),
@@ -75,9 +78,27 @@ class _HomeDrawerState extends State<HomeDrawer> {
                               color: Colors.blue,
                               size: 200,
                             ),
-                          ),
+                          ) : Container(
+                    height: 150,
+                    width: 150,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                    ),
+                    child:  CircleAvatar(
+                      backgroundImage:  NetworkImage( 
+                       
+                        AfterSplashScreenLoader.downloadurl
+                      ),
+                    )) ,
                           InkWell(
-                            onTap: () {},
+                            onTap: () async{
+                            
+                              await  Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>  ProfilePageScreen(userid: widget.userid, username: widget.username,),
+                        ));
+                            },
                             child: Container(
                               padding: EdgeInsets.zero,
                               margin:
@@ -144,6 +165,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(10),border: Border.all(color: Colors.black)),
             child: ListTile(
                 onTap: () {
+                   HomeDrawer.currentroute = "customermainscreen";
                   Navigator.push(
                       context,
                       MaterialPageRoute(

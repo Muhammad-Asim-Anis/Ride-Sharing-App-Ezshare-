@@ -5,12 +5,15 @@ class RideCreateProvider extends ChangeNotifier {
       _isClicked2 = false,
       _isClicked3 = false,
       _isSetvehicle = false;
+     String _destinationloaction = "", _sourcelocation = ""; 
     String _isVehicle = "";
    bool get isClicked1 => _isClicked1; 
    bool get isClicked2 => _isClicked2; 
    bool get isClicked3 => _isClicked3; 
    bool get isSetvehicle => _isSetvehicle; 
    String get isVehicle => _isVehicle;
+   String get destinationlocation => _destinationloaction;
+   String get sourcelocation => _sourcelocation;
     void setClick1()
   {
     _isClicked1 = true;
@@ -62,6 +65,18 @@ class RideCreateProvider extends ChangeNotifier {
     void setisVehicle(String vehiclename)
   {
     _isVehicle = vehiclename;
+     notifyListeners();
+  } 
+
+    void setSourceLocation(String sourcelocation)
+  {
+    _sourcelocation = sourcelocation;
+     notifyListeners();
+  } 
+
+   void setDestinationLocation(String destinationlocation)
+  {
+    _destinationloaction = destinationlocation;
      notifyListeners();
   } 
 }
