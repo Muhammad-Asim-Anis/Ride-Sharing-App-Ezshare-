@@ -1,6 +1,11 @@
 // ignore_for_file: file_names
 
+import 'dart:async';
+
+
 import 'package:ezshare/Riderscreens/screens/custommarker.dart';
+import 'package:ezshare/Riderscreens/screens/riderridecreateinfo.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:ezshare/Riderscreens/screens/riderdestinationserach.dart';
 import 'package:ezshare/homedrawer.dart';
@@ -9,6 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:flutter/services.dart';
+
 
 class RiderDestinationSetScreen extends StatefulWidget {
   final String username;
@@ -27,6 +33,10 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
   TextEditingController destinationlocaton = TextEditingController();
   Uint8List? markerimage;
   double latitude = 24.91638690588, longitude = 67.05699002225725;
+  final Completer<GoogleMapController> controller = Completer(); 
+  String useraddress = "";
+  bool isCameraMoving = false;
+  Timer? debounceTimer;
   @override
   initState() {
     super.initState();
@@ -44,11 +54,26 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
 
   loaddata() {
     getusercurrentposition().then((value) async {
-      
-      setState(() {
-        latitude = value.latitude;
-        longitude = value.longitude;
-      });
+      latitude = value.latitude;
+      longitude = value.longitude;
+
+      var addresses = await placemarkFromCoordinates(latitude, longitude);
+
+      var first = addresses.first;
+      var last = addresses.last;
+
+      useraddress = "${first.name} ${last.street}";
+      RiderRideCreateInfoScreen.sourcelocat = useraddress;
+
+      final GoogleMapController googleMapController = await controller.future;
+      googleMapController.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(target: LatLng(latitude, longitude), zoom: 14.4746),
+      ));
+      // double distanceInMeters = Geolocator.distanceBetween(24.918617835716166,
+      //     67.06161098335912, 24.86059737681838, 67.06993161219316);
+      // print(distanceInMeters / 1000);
+
+      setState(() {});
     });
   }
 
@@ -59,7 +84,8 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
       await Geolocator.requestPermission();
     });
 
-    return await Geolocator.getCurrentPosition();
+    return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
   }
 
   @override
@@ -101,13 +127,7 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
                   width: 100,
                   child: InkWell(
                     onTap: () {
-                      getusercurrentposition().then((value) async {
-
-                        setState(() {
-                          latitude = value.latitude;
-                          longitude = value.longitude;
-                        });
-                      });
+                      loaddata();
                     },
                     child: Row(
                       children: [
@@ -133,23 +153,73 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
             )
           ],
         ),
-        body: GoogleMap(
-          initialCameraPosition: CameraPosition(
-              target: LatLng(latitude, longitude), zoom: 14.4746),
-          mapType: MapType.normal,
-          zoomControlsEnabled: false,
-          onMapCreated: (controller) async {
-            loadmarker();
-          },
-          markers: <Marker>{
-            Marker(
-                icon: (markerimage == null)
-                    ? BitmapDescriptor.defaultMarker
-                    : BitmapDescriptor.fromBytes(markerimage!),
-                markerId: const MarkerId("1"),
-                position: LatLng(latitude, longitude),
-                infoWindow: const InfoWindow(title: "User Location")),
-          },
+        body: Stack(
+          children: 
+            [GoogleMap(
+              initialCameraPosition: CameraPosition(
+                  target: LatLng(latitude, longitude), zoom: 14.4746),
+              mapType: MapType.normal,
+              
+              onMapCreated: (control) async {
+                controller.complete(control);
+                loadmarker();
+              },
+              onCameraMove: (position) async {
+               
+        
+                latitude = position.target.latitude;
+                longitude = position.target.longitude;
+               
+                      setState(() {
+                      
+                      });
+              },onCameraIdle: () async{
+               
+                var addresses =
+                          await placemarkFromCoordinates(latitude, longitude);
+                      var first = addresses.first;
+                      var last = addresses.last;
+        
+                      RiderRideCreateInfoScreen.sourcelocat = useraddress;
+                        useraddress = "${first.name} ${last.street}";
+                      setState(() {
+                      });
+              },
+              // markers: <Marker>{
+              //   Marker(
+              //       draggable: false,
+              //       visible: false,
+              //       // onDragEnd: (value) async {
+                      
+              //       //   latitude = value.latitude;
+              //       //   longitude = value.longitude;
+              //       //   var addresses =
+              //       //       await placemarkFromCoordinates(latitude, longitude);
+              //       //   var first = addresses.first;
+              //       //   var last = addresses.last;
+        
+              //       //   RiderRideCreateInfoScreen.sourcelocat = useraddress;
+              //       //     useraddress = "${first.name} ${last.street}";
+              //       //   setState(() {
+              //       //   });
+              //       //   },
+                    
+              //       icon: (markerimage == null)
+              //           ? BitmapDescriptor.defaultMarker
+              //           : BitmapDescriptor.fromBytes(markerimage!),
+              //       markerId: const MarkerId("1"),
+              //       position: LatLng(latitude, longitude),
+              //       infoWindow: InfoWindow(title: useraddress)),
+              // },
+            ),
+            Center(
+            child: Container(
+              margin: const EdgeInsets.all(5),
+              child: const Icon(Icons.location_on,
+                  size: 50, color: Colors.blueAccent),
+            ),
+          )
+          ],
         ),
         drawer: HomeDrawer(username: widget.username, userid: widget.userid),
         bottomNavigationBar: DraggableScrollableSheet(
@@ -204,9 +274,11 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
                                         )));
                               },
                               keyboardType: TextInputType.none,
-                              controller: sourcelocation,
+                              controller:
+                                  TextEditingController(text: useraddress),
                               decoration: InputDecoration(
                                 hintText: "Source Location",
+                                contentPadding: const EdgeInsets.all(5),
                                 border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10.0),
                                     borderSide: BorderSide.none),

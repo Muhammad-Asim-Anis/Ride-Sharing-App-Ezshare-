@@ -2,6 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../Providers/messageprovider.dart';
 
 class CustomerBookCard extends StatefulWidget {
   final String customername;
@@ -11,6 +14,8 @@ class CustomerBookCard extends StatefulWidget {
   final String date;
   final String startingpoint;
   final String endpoint;
+  final String senderid;
+  final String receiveid;
   const CustomerBookCard(
       {super.key,
       required this.customername,
@@ -19,15 +24,47 @@ class CustomerBookCard extends StatefulWidget {
       required this.time,
       required this.date,
       required this.startingpoint,
-      required this.endpoint});
+      required this.endpoint,
+      required this.senderid,
+      required this.receiveid});
 
   @override
   State<CustomerBookCard> createState() => _CustomerBookCardState();
 }
 
 class _CustomerBookCardState extends State<CustomerBookCard> {
+  CollectionReference chats = FirebaseFirestore.instance.collection("Chats");
+  String roomid = "";
+  createchatroom() async {
+    QuerySnapshot snapshot = await chats
+        .where("participants.${widget.senderid}", isEqualTo: true)
+        .where("participants.${widget.receiveid}", isEqualTo: true)
+        .get();
+    if(snapshot.docs.isNotEmpty)
+    {
+       for (var element in snapshot.docs) {
+        roomid = element.id;
+       }}
+       
+    else
+    {
+       await chats.doc("${widget.senderid}${widget.receiveid}").set({
+         "Senderid" : widget.senderid,
+         "Reciverid" : widget.receiveid,
+         "participants" :
+         {
+          widget.senderid : true,
+          widget.receiveid : true
+         }
+       });
+       roomid = "${widget.senderid}${widget.receiveid}";
+    }
+
+  }
+
   @override
   Widget build(BuildContext context) {
+    final messageprovider = Provider.of<MessageCardProvider>(context);
     return Container(
       margin: const EdgeInsets.all(15),
       width: 300,
@@ -96,13 +133,20 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                             width: 30,
                           ),
                           InkWell(
-                            onTap: () {
+                            onTap: ()async {
+                             await createchatroom();
                               
+                                messageprovider.setRoomId(
+                                   roomid);
+                              
+                              
+                              messageprovider.setItemCount(1);
+                              messageprovider.setClick();
                             },
                             child: Container(
-                              width: 39,
-                              height: 30,
-                                decoration:  BoxDecoration(
+                                width: 39,
+                                height: 30,
+                                decoration: BoxDecoration(
                                     color: Colors.blueAccent,
                                     borderRadius: BorderRadius.circular(100),
                                     boxShadow: const [
@@ -119,15 +163,15 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                                   size: 20,
                                 )),
                           ),
-                          const SizedBox(width: 20,),
+                          const SizedBox(
+                            width: 20,
+                          ),
                           InkWell(
-                            onTap: () {
-                              
-                            },
+                            onTap: () {},
                             child: Container(
-                              width: 39,
-                              height: 30,
-                                decoration:  BoxDecoration(
+                                width: 39,
+                                height: 30,
+                                decoration: BoxDecoration(
                                     color: Colors.blueAccent,
                                     borderRadius: BorderRadius.circular(100),
                                     boxShadow: const [
@@ -144,7 +188,6 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                                   size: 20,
                                 )),
                           )
-
                         ],
                       ))
                     ],
@@ -257,7 +300,7 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
             ),
           ),
           Container(
-            margin: const EdgeInsets.only(left: 25, top: 10,right: 20),
+            margin: const EdgeInsets.only(left: 25, top: 10, right: 20),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -273,7 +316,6 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                     fontSize: 12,
                   ),
                 ),
-                
               ],
             ),
           ),
@@ -304,7 +346,6 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                   ),
                 ),
               ),
-              
             ],
           )
         ],

@@ -18,22 +18,18 @@ class customerhome extends StatefulWidget {
 
 // ignore: camel_case_types
 class _customerhomeState extends State<customerhome> {
-   FirebaseAuth auth = FirebaseAuth.instance;
-   @override
+  FirebaseAuth auth = FirebaseAuth.instance;
+  @override
   void initState() {
-    
     super.initState();
-    
-    firebaseauthcheck();
-    
-  }
- 
 
-   TabBar get _tabbar => const TabBar(
-        labelColor: Color.fromARGB(255, 0, 157, 207), 
+    firebaseauthcheck();
+  }
+
+  TabBar get _tabbar => const TabBar(
+        labelColor: Color.fromARGB(255, 0, 157, 207),
         unselectedLabelColor: Colors.black,
         indicatorColor: Colors.transparent,
-        
         tabs: [
           Tab(
             child: Text(
@@ -49,39 +45,38 @@ class _customerhomeState extends State<customerhome> {
           )
         ],
       );
-loaddata(BuildContext context)
-{
-   final authprovider = Provider.of<AuthenticationProvider>(context);
-   authprovider.setuserID(widget.userid);
-   authprovider.setuserName(widget.username);
-   
-}      
-firebaseauthcheck()
-{
+  loaddata(BuildContext context) {
+    final authprovider = Provider.of<AuthenticationProvider>(context);
+    authprovider.setuserID(widget.userid);
+    authprovider.setuserName(widget.username);
+  }
+
+  firebaseauthcheck() {
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (user == null) {
         setState(() {
-          
-        Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const  PhoneAuthenticateScreen(),
-                        ));
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PhoneAuthenticateScreen(),
+              ));
         });
-      } 
+      }
     });
-}
+  }
+
   @override
   Widget build(BuildContext context) {
-   
     return DefaultTabController(
         length: 2,
         child: Scaffold(
           appBar: AppBar(
-            backgroundColor: Colors.white,
-            centerTitle: true,
-            iconTheme: const IconThemeData( color: Colors.blue,),
-            title: const Center(
+              backgroundColor: Colors.white,
+              centerTitle: true,
+              iconTheme: const IconThemeData(
+                color: Colors.blue,
+              ),
+              title: const Center(
                 child: Text(
                   "Home",
                   style: TextStyle(
@@ -90,15 +85,17 @@ firebaseauthcheck()
                       fontWeight: FontWeight.bold),
                 ),
               ),
-           bottom: PreferredSize(
+              bottom: PreferredSize(
                 preferredSize: _tabbar.preferredSize,
                 child: ColoredBox(
                   color: const Color.fromARGB(255, 217, 217, 217),
                   child: _tabbar,
                 ),
-              )
-          ),
-          body: const  TabBarView(children: [first(), first(),]),
+              )),
+          body:  TabBarView(children: [
+            first(userid: widget.userid, username: widget.username,),
+            first(userid: widget.userid, username: widget.username,),
+          ]),
           drawer: CustomerHomeDrawer(
               username: widget.username, userid: widget.userid),
         ));

@@ -1,17 +1,34 @@
 // ignore_for_file: camel_case_types, avoid_unnecessary_containers
 
+import 'package:ezshare/Customerscreens/screens/customerrequestbooking.dart';
+
 import 'package:flutter/material.dart';
 
 
 class rideCard extends StatefulWidget {
+  final String userid;
+  final String username;
   final String ridername;
   final String vehiclemodel;
+  final String vehicleplatenumber;
   final int seats;
   final String time;
   final String date;
   final String startingpoint;
-  final String endpoint; 
-  const rideCard({super.key, required this.ridername, required this.vehiclemodel, required this.seats, required this.time, required this.date, required this.startingpoint, required this.endpoint});
+  final String endpoint;
+  final String rideid;
+  const rideCard(
+      {super.key,
+      required this.ridername,
+      required this.vehiclemodel,
+      required this.seats,
+      required this.time,
+      required this.date,
+      required this.startingpoint,
+      required this.endpoint,
+      required this.rideid,
+      required this.userid,
+      required this.username, required this.vehicleplatenumber});
 
   @override
   State<rideCard> createState() => _rideCardState();
@@ -20,6 +37,7 @@ class rideCard extends StatefulWidget {
 class _rideCardState extends State<rideCard> {
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       body: Container(
         width: 270,
@@ -66,7 +84,7 @@ class _rideCardState extends State<rideCard> {
                             children: [
                               Container(
                                 margin: EdgeInsets.zero,
-                                child: Column(children:  [
+                                child: Column(children: [
                                   const SizedBox(height: 8),
                                   Text(widget.ridername,
                                       style: const TextStyle(
@@ -87,9 +105,9 @@ class _rideCardState extends State<rideCard> {
                                 ]),
                               ),
                               Container(
-                                child: Column(children:  [
+                                child: Column(children: [
                                   const SizedBox(height: 8),
-                                 const Text("(4.5)",
+                                  const Text("(4.5)",
                                       style: TextStyle(
                                         color: Colors.blue,
                                       )),
@@ -184,18 +202,22 @@ class _rideCardState extends State<rideCard> {
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12),
                             ),
-                            const Text(
-                              "Saddar,Karachi",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                  color: Colors.grey),
+                            SizedBox(
+                              width: 200,
+                              height: 10,
+                              child: Text(
+                                widget.startingpoint,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                    color: Colors.grey),
+                              ),
                             ),
                             SizedBox(
                               height: 10.0,
-                              child:  Center(
-                                child:  Container(
-                                  margin:  const EdgeInsetsDirectional.only(
+                              child: Center(
+                                child: Container(
+                                  margin: const EdgeInsetsDirectional.only(
                                       start: 1.0, end: 1.0),
                                   height: 1.0,
                                   width: 230,
@@ -208,12 +230,16 @@ class _rideCardState extends State<rideCard> {
                               style: TextStyle(
                                   fontWeight: FontWeight.bold, fontSize: 12),
                             ),
-                            const Text(
-                              "Hussainabad,Karachi",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                  color: Colors.grey),
+                            SizedBox(
+                              width: 200,
+                              height: 10,
+                              child: Text(
+                                widget.endpoint,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                    color: Colors.grey),
+                              ),
                             ),
                           ],
                         ),
@@ -236,7 +262,25 @@ class _rideCardState extends State<rideCard> {
                               color: Colors.blue,
                             ),
                             child: InkWell(
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            CustomerRequestBookingScreen(
+                                              cardid: widget.rideid,
+                                              userid: widget.userid,
+                                              username: widget.username,
+                                              date: widget.date,
+                                              endpoint: widget.endpoint,
+                                              ridername: widget.ridername,
+                                              seats: widget.seats,
+                                              startingpoint:
+                                                  widget.startingpoint,
+                                              time: widget.time,
+                                              vehiclemodel: widget.vehiclemodel, vehicleplatenumber: widget.vehicleplatenumber,
+                                            )));
+                              },
                               child: Center(
                                 child: Container(
                                     alignment: Alignment.center,

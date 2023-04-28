@@ -1,14 +1,41 @@
 // ignore_for_file: avoid_unnecessary_containers
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ezshare/Providers/googlemapprovider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import '../../Providers/messageprovider.dart';
+import '../../Riderscreens/screens/custommarker.dart';
 
 class CustomerRequestBookingCard extends StatefulWidget {
-  const CustomerRequestBookingCard({super.key});
+  final String userid;
+  final String username;
+  final String ridername;
+  final String vehiclemodel;
+  final String vehicleplatenumber;
+  final int seats;
+  final String time;
+  final String date;
+  final String startingpoint;
+  final String endpoint;
+  final String rideid;
+  const CustomerRequestBookingCard(
+      {super.key,
+      required this.userid,
+      required this.username,
+      required this.ridername,
+      required this.vehiclemodel,
+      required this.seats,
+      required this.time,
+      required this.date,
+      required this.startingpoint,
+      required this.endpoint,
+      required this.vehicleplatenumber,
+      required this.rideid});
 
   @override
   State<CustomerRequestBookingCard> createState() =>
@@ -17,12 +44,32 @@ class CustomerRequestBookingCard extends StatefulWidget {
 
 class _CustomerRequestBookingCardState
     extends State<CustomerRequestBookingCard> {
+  CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
+  int count = 1;
+  int avaliableseats = 0;
 
-      
-      int count = 1;
+  @override
+  initState() {
+    super.initState();
+    ridedataretrive();
+  }
+
+  ridedataretrive() async {
+    await rides.doc(widget.rideid).snapshots().forEach((element) {
+      List array = element["users"];
+      setState(() {
+        avaliableseats = widget.seats - array.length;
+      });
+      if (avaliableseats == 0) {
+        count = 0;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final messageprovider = Provider.of<MessageCardProvider>(context);
+    final googlemapprovider = Provider.of<GoogleMapProvider>(context);
     return Container(
       margin: const EdgeInsets.all(15),
       width: 300,
@@ -72,7 +119,7 @@ class _CustomerRequestBookingCardState
                             children: [
                               Container(
                                   child: Text(
-                                "Rider Name",
+                                widget.ridername,
                                 style: GoogleFonts.poppins(
                                     color: Colors.white,
                                     fontSize: 13,
@@ -80,7 +127,7 @@ class _CustomerRequestBookingCardState
                               )),
                               Container(
                                   child: Text(
-                                "Honda-Civic",
+                                widget.vehiclemodel,
                                 style: GoogleFonts.poppins(
                                     color: Colors.white,
                                     fontSize: 11,
@@ -95,9 +142,8 @@ class _CustomerRequestBookingCardState
                             child: Row(
                               children: [
                                 InkWell(
-
                                   onTap: () {
-                                   messageprovider.setClick();
+                                    messageprovider.setClick();
                                   },
                                   child: Container(
                                       width: 39,
@@ -125,7 +171,9 @@ class _CustomerRequestBookingCardState
                                   width: 20,
                                 ),
                                 InkWell(
-                                  onTap: () {},
+                                  onTap: () {
+                                    ridedataretrive();
+                                  },
                                   child: Container(
                                       width: 39,
                                       height: 30,
@@ -160,7 +208,7 @@ class _CustomerRequestBookingCardState
                           child: Row(
                         children: [
                           Text(
-                            "Date: 15-2-2023",
+                            "Date: ${widget.date}",
                             style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 13,
@@ -172,7 +220,7 @@ class _CustomerRequestBookingCardState
                           Container(
                             margin: const EdgeInsets.only(top: 10),
                             child: Text(
-                              "Time: 2 PM",
+                              "Time: ${widget.time}",
                               style: GoogleFonts.poppins(
                                   color: Colors.white,
                                   fontSize: 13,
@@ -239,10 +287,12 @@ class _CustomerRequestBookingCardState
                         ),
                       ),
                       Container(
+                        width: 200,
+                        height: 10,
                         margin: const EdgeInsets.only(bottom: 7),
-                        child: const Text(
-                          "Saddar,Karachi",
-                          style: TextStyle(
+                        child: Text(
+                          widget.startingpoint,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 10,
                               color: Colors.grey),
@@ -256,12 +306,17 @@ class _CustomerRequestBookingCardState
                               fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
-                      const Text(
-                        "Hussainabad,Karachi",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
-                            color: Colors.grey),
+                      Container(
+                        width: 200,
+                        height: 10,
+                        margin: const EdgeInsets.only(bottom: 0),
+                        child: Text(
+                          widget.endpoint,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                              color: Colors.grey),
+                        ),
                       ),
                     ],
                   ),
@@ -284,14 +339,13 @@ class _CustomerRequestBookingCardState
           Container(
             margin: const EdgeInsets.only(left: 20, top: 10),
             child: Row(
-              
-           mainAxisAlignment: MainAxisAlignment.start,
-           crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   child: Column(
-                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                   crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: const [
                       Icon(
                         Icons.circle,
@@ -319,50 +373,70 @@ class _CustomerRequestBookingCardState
                   ),
                 ),
                 Column(
-                       mainAxisAlignment: MainAxisAlignment.start,
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                      
-                 
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
                       width: 280,
                       child: Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                            margin: const EdgeInsets.only(top: 0, bottom: 2),
-                            child: const Text(
-                              "Your Pick-up Location",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 12),
-                            ),
-                          ),
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 7),
-                            child: const Text(
-                              "Saddar,Karachi",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                  color: Colors.grey),
-                            ),
-                          ),
+                                margin:
+                                    const EdgeInsets.only(top: 0, bottom: 2),
+                                child: const Text(
+                                  "Your Pick-up Location",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12),
+                                ),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 7),
+                                child: const Text(
+                                  "Saddar,Karachi",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                      color: Colors.grey),
+                                ),
+                              ),
                             ],
                           ),
-                          
-                          Container(
-                            width: 22,
-                            height: 22,
-                            decoration: BoxDecoration(
-                                color: Colors.blueAccent,
-                                borderRadius: BorderRadius.circular(100)),
-                            child: const  Icon(
-                              Icons.add,
-                              color: Colors.white,size: 20,
+                          InkWell(
+                            onTap: () {
+                              if (!googlemapprovider.pickup) {
+                                googlemapprovider.markers.add(Marker(
+                                    icon: BitmapDescriptor.defaultMarker,
+                                    markerId: const MarkerId("4"),
+                                    position: googlemapprovider.position,
+                                    infoWindow: const InfoWindow(
+                                        title: "Customer Source Location")));
+                                googlemapprovider.setpickup();
+                              } else {
+                               googlemapprovider.markers.removeWhere((element) => element.markerId.value == '4',);
+                                googlemapprovider.unsetpickup();
+                              }
+                            },
+                            child: Container(
+                              width: 22,
+                              height: 22,
+                              decoration: BoxDecoration(
+                                  color: (googlemapprovider.pickup)
+                                      ? Colors.redAccent
+                                      : Colors.blueAccent,
+                                  borderRadius: BorderRadius.circular(100)),
+                              child: Icon(
+                                (googlemapprovider.pickup)
+                                    ? Icons.close
+                                    : Icons.add,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ),
                           )
                         ],
@@ -387,15 +461,17 @@ class _CustomerRequestBookingCardState
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Column(
-                             mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                margin: const EdgeInsets.only(top: 0, bottom: 2),
+                                margin:
+                                    const EdgeInsets.only(top: 0, bottom: 2),
                                 child: const Text(
                                   "YourDrop-Off Location",
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 12),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12),
                                 ),
                               ),
                               Container(
@@ -409,17 +485,40 @@ class _CustomerRequestBookingCardState
                               ),
                             ],
                           ),
-                          Container(
+                          InkWell(
+                            onTap: () {
+                               
+
+                              if (!googlemapprovider.dropoff) {
+                                   googlemapprovider.markers.add(Marker(
+                                    icon: BitmapDescriptor.defaultMarker,
+                                    markerId: const MarkerId("5"),
+                                    position: googlemapprovider.position,
+                                    infoWindow: const InfoWindow(
+                                        title: "Customer Destination Location")));
+                                googlemapprovider.setdropoff();
+                              } else {
+                                  googlemapprovider.markers.removeWhere((element) => element.markerId.value == '5',);
+                                googlemapprovider.unsetdropoff();
+                              }
+                            },
+                            child: Container(
                               width: 22,
                               height: 22,
                               decoration: BoxDecoration(
-                                  color: Colors.blueAccent,
+                                  color: (googlemapprovider.dropoff)
+                                      ? Colors.redAccent
+                                      : Colors.blueAccent,
                                   borderRadius: BorderRadius.circular(100)),
-                              child: const  Icon(
-                                Icons.add,
-                                color: Colors.white,size: 20,
+                              child: Icon(
+                                (googlemapprovider.dropoff)
+                                    ? Icons.close
+                                    : Icons.add,
+                                color: Colors.white,
+                                size: 20,
                               ),
-                            )
+                            ),
+                          )
                         ],
                       ),
                     ),
@@ -452,7 +551,7 @@ class _CustomerRequestBookingCardState
                     fontSize: 9,
                   ),
                 ),
-                Text("1",
+                Text("${widget.seats}",
                     style: GoogleFonts.poppins(
                       fontSize: 9,
                     ))
@@ -471,7 +570,7 @@ class _CustomerRequestBookingCardState
                     fontSize: 9,
                   ),
                 ),
-                Text("KBR-9050",
+                Text(widget.vehicleplatenumber.toUpperCase(),
                     style: GoogleFonts.poppins(
                       fontSize: 9,
                     ))
@@ -490,14 +589,14 @@ class _CustomerRequestBookingCardState
                     fontSize: 9,
                   ),
                 ),
-                Text("1",
+                Text("$avaliableseats",
                     style: GoogleFonts.poppins(
                       fontSize: 9,
                     ))
               ],
             ),
           ),
-           Container(
+          Container(
             width: 286,
             margin: const EdgeInsets.only(left: 0, top: 10),
             child: Row(
@@ -510,78 +609,75 @@ class _CustomerRequestBookingCardState
                   ),
                 ),
                 Container(
-                            margin: const EdgeInsets.only(top: 0),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      decoration: BoxDecoration(
-                                          color: const Color.fromARGB(
-                                              255, 155, 155, 155),
-                                          border:
-                                              Border.all(color: Colors.grey),
-                                          borderRadius: const BorderRadius.only(
-                                              topLeft: Radius.circular(4),
-                                              bottomLeft: Radius.circular(4))),
-                                      child: InkWell(
-                                        onTap: () {
-                                         
-                                        },
-                                        child: const Icon(
-                                          Icons.add,
-                                          size: 20,
-                                        ),
-                                      ),
-                                    ),
-                                    Container(
-                                      height: 22,
-                                      width: 40,
-                                      decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          border: Border.all(
-                                              color: const Color.fromARGB(
-                                                  255, 155, 155, 155))),
-                                      child: Center(
-                                        child: Text("$count",
-                                            style: GoogleFonts.poppins(
-                                                fontSize: 12),
-                                            textAlign: TextAlign.center),
-                                      ),
-                                    ),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                          color: const Color.fromARGB(
-                                              255, 155, 155, 155),
-                                          border:
-                                              Border.all(color: Colors.grey),
-                                          borderRadius: const BorderRadius.only(
-                                              topRight: Radius.circular(4),
-                                              bottomRight: Radius.circular(4))),
-                                      child: InkWell(
-                                        onTap: () {
-                                          setState(() {
-                                            if (count > 1) {
-                                              count--;
-                                            }
-                                          });
-                                        },
-                                        child: const Icon(
-                                          CupertinoIcons.minus,
-                                          size: 20,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                
-                              ],
+                  margin: const EdgeInsets.only(top: 0),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                                color: const Color.fromARGB(255, 155, 155, 155),
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4),
+                                    bottomLeft: Radius.circular(4))),
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (count >= 1 && count < avaliableseats) {
+                                    count++;
+                                  }
+                                });
+                              },
+                              child: const Icon(
+                                Icons.add,
+                                size: 20,
+                              ),
                             ),
                           ),
+                          Container(
+                            height: 22,
+                            width: 40,
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(
+                                    color: const Color.fromARGB(
+                                        255, 155, 155, 155))),
+                            child: Center(
+                              child: Text("$count",
+                                  style: GoogleFonts.poppins(fontSize: 12),
+                                  textAlign: TextAlign.center),
+                            ),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                                color: const Color.fromARGB(255, 155, 155, 155),
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: const BorderRadius.only(
+                                    topRight: Radius.circular(4),
+                                    bottomRight: Radius.circular(4))),
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  if (count > 1) {
+                                    count--;
+                                  }
+                                });
+                              },
+                              child: const Icon(
+                                CupertinoIcons.minus,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
-         
           const SizedBox(
             height: 20,
           ),
@@ -591,7 +687,7 @@ class _CustomerRequestBookingCardState
               width: 285,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(7),
-                color: Colors.blue,
+                color: (avaliableseats != 0) ? Colors.blue : Colors.grey,
               ),
               child: InkWell(
                 onTap: () {
@@ -604,10 +700,15 @@ class _CustomerRequestBookingCardState
                 child: Center(
                   child: Container(
                       alignment: Alignment.center,
-                      child: const Text(
-                        "Request Booking",
-                        style: TextStyle(color: Colors.white),
-                      )),
+                      child: (avaliableseats != 0)
+                          ? const Text(
+                              "Request Booking",
+                              style: TextStyle(color: Colors.white),
+                            )
+                          : const Text(
+                              "No Seats Avaliable",
+                              style: TextStyle(color: Colors.white),
+                            )),
                 ),
               ),
             ),

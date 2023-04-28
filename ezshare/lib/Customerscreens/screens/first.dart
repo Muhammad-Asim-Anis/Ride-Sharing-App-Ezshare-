@@ -6,7 +6,9 @@ import 'package:ezshare/Customerscreens/widgets/search_field.dart';
 import 'package:flutter/material.dart';
 
 class first extends StatefulWidget {
-  const first({super.key});
+  final String userid;
+  final String username;
+  const first({super.key, required this.userid, required this.username});
 
   @override
   State<first> createState() => _firstState();
@@ -18,57 +20,60 @@ class _firstState extends State<first> {
   Widget build(BuildContext context) {
     return Scaffold(
         body: Column(
-          children: [
-            const SizedBox(
-            height: 20,
+      children: [
+        const SizedBox(
+          height: 20,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Container(
+            child: const SearchField(),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Container(
-              child: const SearchField(),
-            ),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-            Expanded(
-              child: SizedBox(
-                  width: double.infinity,
-                  child: StreamBuilder(
+        ),
+        const SizedBox(
+          height: 20,
+        ),
+        Expanded(
+          child: SizedBox(
+            width: double.infinity,
+            child: StreamBuilder(
                 stream: rides.snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return const Center(child:  CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   }
-            
+
                   return ListView.builder(
                     itemCount: snapshot.data!.docs.length,
-            
                     itemBuilder: (context, index) {
                       final DocumentSnapshot ridesdetails =
-                                        snapshot.data!.docs[index];
+                          snapshot.data!.docs[index];
                       return Center(
                         child: Container(
                           margin: const EdgeInsets.all(10),
                           height: 230,
                           width: 270,
-                          child:  rideCard(
+                          child: rideCard(
                             date: ridesdetails['SelectedDate'],
-                            endpoint: '',
+                            endpoint: ridesdetails['DestinationLocation'],
                             ridername: ridesdetails['Ridername'],
                             seats: ridesdetails['Seats'],
-                            startingpoint: '',
+                            startingpoint: ridesdetails['SourceLocation'],
                             time: ridesdetails['SelectedTime'],
                             vehiclemodel: ridesdetails['VehicleName'],
+                            rideid: ridesdetails.id,
+                            userid: widget.userid,
+                            username: widget.username,
+                            vehicleplatenumber: ridesdetails['VehicleNumber'],
                           ),
                         ),
                       );
                     },
                   );
                 }),
-                ),
-            ),
-          ],
-        ));
+          ),
+        ),
+      ],
+    ));
   }
 }

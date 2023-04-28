@@ -1,4 +1,5 @@
 import 'package:ezshare/Providers/authenticationprovider.dart';
+import 'package:ezshare/Providers/googlemapprovider.dart';
 import 'package:ezshare/Providers/messageprovider.dart';
 import 'package:ezshare/Providers/ridecreateprovider.dart';
 import 'package:ezshare/aftersplashscreen.dart';
@@ -25,7 +26,9 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => MessageCardProvider()),
         ChangeNotifierProvider(create: (_) => RideCreateProvider()),
-        ChangeNotifierProvider(create: (_) => AuthenticationProvider())
+        ChangeNotifierProvider(create: (_) => AuthenticationProvider()),
+         ChangeNotifierProvider(create: (_) => GoogleMapProvider())
+        
       ],
       child: MaterialApp(
         title: 'Ezshare',

@@ -67,6 +67,31 @@ class _RiderDestinationSerachScreenState
     } else {}
   }
 
+  Future<Map<String, dynamic>> fetchRouteData(String apiKey, double startLat,
+      double startLng, double endLat, double endLng) async {
+    String apiUrl =
+        "https://maps.googleapis.com/maps/api/directions/json?origin=$startLat,$startLng&destination=$endLat,$endLng&key=$apiKey";
+    http.Response response = await http.get(Uri.parse(apiUrl));
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = jsonDecode(response.body);
+      return data;
+    } else {
+      throw Exception('Failed to fetch route data');
+    }
+  }
+
+  double getDistanceFromRoute(Map<String, dynamic> routeData) {
+    int distanceInMeters =
+        routeData['routes'][0]['legs'][0]['distance']['value'];
+    double distanceInKilometers = distanceInMeters / 1000;
+    return distanceInKilometers;
+  }
+
+  int getTimeFromRoute(Map<String, dynamic> routeData) {
+    int timeInSeconds = routeData['routes'][0]['legs'][0]['duration']['value'];
+    return timeInSeconds;
+  }
+
   @override
   Widget build(BuildContext context) {
     final ridecreateprovider = Provider.of<RideCreateProvider>(context);
@@ -227,10 +252,10 @@ class _RiderDestinationSerachScreenState
                   ),
                   InkWell(
                       onTap: () async {
-                         List<LatLng> polylines = [];
-  GoogleMapPolyline googleMapPolyline =
-      GoogleMapPolyline(apiKey: "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk");
-      
+                        List<LatLng> polylines = [];
+                        GoogleMapPolyline googleMapPolyline = GoogleMapPolyline(
+                            apiKey: "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk");
+
                         setloading = true;
                         ridecreateprovider
                             .setSourceLocation(sourcelocation.text.toString());
@@ -244,11 +269,26 @@ class _RiderDestinationSerachScreenState
                             await locationFromAddress(
                                 destinationlocation.text.toString());
 
-                          polylines = (await googleMapPolyline.getCoordinatesWithLocation(
-        origin: LatLng(locationssource.last.latitude, locationssource.last.longitude),
-        destination: LatLng(locationsdestination.last.latitude, locationsdestination.last.longitude),
-        mode: RouteMode.driving,
-      ))!;       
+                        polylines =
+                            (await googleMapPolyline.getCoordinatesWithLocation(
+                          origin: LatLng(locationssource.last.latitude,
+                              locationssource.last.longitude),
+                          destination: LatLng(
+                              locationsdestination.last.latitude,
+                              locationsdestination.last.longitude),
+                          mode: RouteMode.driving,
+                        ))!;
+
+                        Map<String, dynamic> routeData = await fetchRouteData(
+                            "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk",
+                            locationssource.last.latitude,
+                            locationssource.last.longitude,
+                            locationsdestination.last.latitude,
+                            locationsdestination.last.longitude);
+
+                        double distance = getDistanceFromRoute(routeData);
+                        double time = getTimeFromRoute(routeData) / 60;
+
                         setloading = false;
                         // ignore: use_build_context_synchronously
                         await Navigator.push(
@@ -261,7 +301,8 @@ class _RiderDestinationSerachScreenState
                                   userid: widget.userid,
                                   username: widget.username,
                                   destinationlist: locationsdestination,
-                                  sourcelist: locationssource, polylines: polylines,
+                                  sourcelist: locationssource,
+                                  polylines: polylines, distance: distance.ceilToDouble(), time: time.round(),
                                 )));
                       },
                       hoverColor: Colors.white,

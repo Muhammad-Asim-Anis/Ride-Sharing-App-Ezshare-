@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezshare/Riderscreens/widgets/rider_card.dart';
 import 'package:ezshare/homedrawer.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ class RiderRideBookingDeatilsScreen extends StatefulWidget {
 
 class _RiderRideBookingDeatilsScreenState
     extends State<RiderRideBookingDeatilsScreen> {
+       CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,20 +33,30 @@ class _RiderRideBookingDeatilsScreenState
               fontWeight: FontWeight.w600),
         ),
       ),
-      body: ListView.builder(
-        itemCount: 3,
-        itemBuilder:(context, index) {
-        return const  Center(
-            child: RiderCard(
-                    ridername: "Asim",
-                    vehiclemodel: "honda-xyb",
-                    seats: 2,
-                    time: "2:00 PM",
-                    date: "5/3/2023",
-                    startingpoint: "hussainabad",
-                    endpoint: "sadar"),
-          );
-      }, ),
+      body: StreamBuilder(
+        stream: rides.where("Riderid",isEqualTo: widget.userid).snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+                    return const Center(child:  CircularProgressIndicator());
+                  }         
+          return ListView.builder(
+            itemCount: snapshot.data!.docs.length,
+            itemBuilder:(context, index) {
+              final DocumentSnapshot ridesdetails =
+                                        snapshot.data!.docs[index];
+            return   Center(
+                child: RiderCard(
+                        ridername: ridesdetails["Ridername"],
+                        vehiclemodel: ridesdetails["VehicleNumber"],
+                        seats: ridesdetails["Seats"],
+                        time: ridesdetails["SelectedTime"],
+                        date: ridesdetails["SelectedDate"],
+                        startingpoint: ridesdetails["SourceLocation"],
+                        endpoint: ridesdetails["DestinationLocation"], userid: widget.userid, username: widget.username, cardid: ridesdetails.id,),
+              );
+          }, );
+        }
+      ),
       drawer:  HomeDrawer(username: widget.username, userid: widget.userid),
     );
   }

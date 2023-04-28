@@ -2,9 +2,12 @@
 
 import 'package:ezshare/Riderscreens/screens/riderridedetailview.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class RiderCard extends StatefulWidget {
+  final String userid;
+  final String username;
   final String ridername;
   final String vehiclemodel;
   final int seats;
@@ -12,6 +15,7 @@ class RiderCard extends StatefulWidget {
   final String date;
   final String startingpoint;
   final String endpoint;
+  final String cardid;
   const RiderCard(
       {super.key,
       required this.ridername,
@@ -20,7 +24,10 @@ class RiderCard extends StatefulWidget {
       required this.time,
       required this.date,
       required this.startingpoint,
-      required this.endpoint});
+      required this.endpoint,
+      required this.userid,
+      required this.username,
+      required this.cardid});
 
   @override
   State<RiderCard> createState() => _RiderCardState();
@@ -52,7 +59,7 @@ class _RiderCardState extends State<RiderCard> {
                     topLeft: Radius.circular(7), topRight: Radius.circular(7)),
                 color: Colors.blue),
             margin: const EdgeInsets.all(0),
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(0),
             child: Row(
               children: [
                 Container(
@@ -151,6 +158,7 @@ class _RiderCardState extends State<RiderCard> {
                 ),
               ),
               Container(
+                
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -164,10 +172,12 @@ class _RiderCardState extends State<RiderCard> {
                       ),
                     ),
                     Container(
+                      width: 200,
+                      height: 10,
                       margin: const EdgeInsets.only(bottom: 7),
-                      child: const Text(
-                        "Saddar,Karachi",
-                        style: TextStyle(
+                      child: Text(
+                        widget.startingpoint,
+                        style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 10,
                             color: Colors.grey),
@@ -186,6 +196,7 @@ class _RiderCardState extends State<RiderCard> {
                       ),
                     ),
                     Container(
+                      
                       margin: const EdgeInsets.only(top: 5, bottom: 2),
                       child: const Text(
                         "Ending point",
@@ -193,12 +204,17 @@ class _RiderCardState extends State<RiderCard> {
                             fontWeight: FontWeight.bold, fontSize: 12),
                       ),
                     ),
-                    const Text(
-                      "Hussainabad,Karachi",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                          color: Colors.grey),
+                    Container(
+                      width: 200,
+                      height: 10,
+                      margin: const EdgeInsets.only(bottom: 7),
+                      child: Text(
+                        widget.endpoint,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            color: Colors.grey),
+                      ),
                     ),
                   ],
                 ),
@@ -250,12 +266,25 @@ class _RiderCardState extends State<RiderCard> {
                     color: Colors.blue,
                   ),
                   child: InkWell(
-                    onTap: () {
-                       Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const  RiderRideDetailViewScreen(userid: '', username: '',),
-                      ));
+                    onTap: () async {
+                      List<Location> locationssource =
+                          await locationFromAddress(
+                              widget.startingpoint.toString());
+
+                      List<Location> locationsdestination =
+                          await locationFromAddress(widget.endpoint.toString());
+                      // ignore: use_build_context_synchronously
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RiderRideDetailViewScreen(
+                              userid: widget.userid,
+                              username: widget.username,
+                              cardid: widget.cardid,
+                              destinationlist: locationsdestination,
+                              sourcelist: locationssource,
+                            ),
+                          ));
                     },
                     child: Center(
                       child: Container(

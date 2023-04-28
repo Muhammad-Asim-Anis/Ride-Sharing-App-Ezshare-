@@ -11,9 +11,10 @@ import 'package:provider/provider.dart';
 class RiderRiderCreateInfoCard extends StatefulWidget {
   final String userid;
   final String username;
-  
+  final double distance;
+  final int time;
   const RiderRiderCreateInfoCard(
-      {super.key, required this.userid, required this.username,});
+      {super.key, required this.userid, required this.username, required this.distance, required this.time,});
 
   @override
   State<RiderRiderCreateInfoCard> createState() =>
@@ -28,10 +29,11 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
     await rides.add({
       "Ridername": widget.username,
       "Riderid": widget.userid,
-      "Time": "30 min",
-      "Distance": "12Km",
+      "Time": widget.time.toString(),
+      "Distance": widget.distance.toString(),
       "Vehicle": isVehicle,
       "Seats": count, 
+      "Rating": 0,
       "VehicleName": vehiclename,
       "VehicleNumber": vehiclenumber,
       "SelectedDate": formattedDate,
@@ -65,7 +67,7 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
             controller: scrollController,
             child: Column(children: [
               Container(
-                height: 100,
+                height: 110,
                 decoration: const BoxDecoration(
                     borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(10),
@@ -84,14 +86,16 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                         const SizedBox(
                           width: 10,
                         ),
-                        Text(
-                          ridecreateprovider.sourcelocation,
-                          style: GoogleFonts.poppins(color: Colors.white),
+                        Expanded(
+                          child: Text(
+                            ridecreateprovider.sourcelocation,softWrap: true,
+                            style: GoogleFonts.poppins(color: Colors.white),
+                          ),
                         )
                       ],
                     ),
                     const SizedBox(
-                      height: 20,
+                      height: 10,
                     ),
                     Row(
                       children: [
@@ -103,12 +107,15 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                         const SizedBox(
                           width: 10,
                         ),
-                        Text(
-                          ridecreateprovider.destinationlocation,
-                          style: GoogleFonts.poppins(color: Colors.white),
-                        )
+                        Expanded(
+                          child: Text(
+                            ridecreateprovider.destinationlocation,
+                            style: GoogleFonts.poppins(color: Colors.white),softWrap: true,
+                          ),
+                        ),
                       ],
                     ),
+                    
                   ],
                 ),
               ),
@@ -124,7 +131,7 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                             color: const Color.fromARGB(255, 155, 155, 155)),
                       ),
                       Text(
-                        "30 min",
+                        "${widget.time} min",
                         style: GoogleFonts.poppins(
                             color: Colors.black, fontWeight: FontWeight.w600),
                       )
@@ -141,7 +148,7 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                             color: const Color.fromARGB(255, 155, 155, 155)),
                       ),
                       Text(
-                        "12 Km",
+                        "${widget.distance} Km",
                         style: GoogleFonts.poppins(
                             color: Colors.black, fontWeight: FontWeight.w600),
                       )

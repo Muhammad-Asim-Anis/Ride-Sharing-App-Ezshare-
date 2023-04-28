@@ -19,6 +19,8 @@ class RiderRideCreateInfoScreen extends StatefulWidget {
   final List<Location> sourcelist;
   final List<Location> destinationlist;
   final List<LatLng> polylines;
+  final double distance;
+  final int time;
   static String sourcelocat = "";
   static String destinationlocat = ""; 
   const RiderRideCreateInfoScreen(
@@ -26,7 +28,7 @@ class RiderRideCreateInfoScreen extends StatefulWidget {
       required this.sourcelocation,
       required this.destinationlocation,
       required this.userid,
-      required this.username, required this.sourcelist, required this.destinationlist, required this.polylines});
+      required this.username, required this.sourcelist, required this.destinationlist, required this.polylines, required this.distance, required this.time});
 
   @override
   State<RiderRideCreateInfoScreen> createState() =>
@@ -167,7 +169,7 @@ class _RiderRideCreateInfoScreenState extends State<RiderRideCreateInfoScreen> {
           return (value.isSetvehicle == false)
               ? RiderRiderCreateInfoCard(
                   userid: widget.userid,
-                  username: widget.username, 
+                  username: widget.username, distance: widget.distance, time: widget.time, 
                 )
               : const RiderRideSelectInfoCard();
         },
