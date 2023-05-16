@@ -1,9 +1,10 @@
 // ignore_for_file: avoid_unnecessary_containers
-
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../Providers/messageprovider.dart';
 
 class CustomerBookCard extends StatefulWidget {
@@ -16,6 +17,10 @@ class CustomerBookCard extends StatefulWidget {
   final String endpoint;
   final String senderid;
   final String receiveid;
+  final String imageurl;
+  final String usercontact;
+  final String rideid;
+  final bool afterstart;
   const CustomerBookCard(
       {super.key,
       required this.customername,
@@ -26,40 +31,76 @@ class CustomerBookCard extends StatefulWidget {
       required this.startingpoint,
       required this.endpoint,
       required this.senderid,
-      required this.receiveid});
+      required this.receiveid,
+      required this.imageurl,
+      required this.usercontact,
+      required this.rideid,
+      required this.afterstart});
 
   @override
   State<CustomerBookCard> createState() => _CustomerBookCardState();
 }
 
 class _CustomerBookCardState extends State<CustomerBookCard> {
+  CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
   CollectionReference chats = FirebaseFirestore.instance.collection("Chats");
   String roomid = "";
+  bool isarrived = false, isstart = false;
+  bool isaccept = false;
+  @override
+  void initState() {
+    super.initState();
+    ridearrivedcheck();
+    ridestartcheck();
+  }
+
   createchatroom() async {
     QuerySnapshot snapshot = await chats
         .where("participants.${widget.senderid}", isEqualTo: true)
         .where("participants.${widget.receiveid}", isEqualTo: true)
         .get();
-    if(snapshot.docs.isNotEmpty)
-    {
-       for (var element in snapshot.docs) {
+    if (snapshot.docs.isNotEmpty) {
+      for (var element in snapshot.docs) {
         roomid = element.id;
-       }}
-       
-    else
-    {
-       await chats.doc("${widget.senderid}${widget.receiveid}").set({
-         "Senderid" : widget.senderid,
-         "Reciverid" : widget.receiveid,
-         "participants" :
-         {
-          widget.senderid : true,
-          widget.receiveid : true
-         }
-       });
-       roomid = "${widget.senderid}${widget.receiveid}";
+      }
+    } else {
+      await chats.doc("${widget.senderid}${widget.receiveid}").set({
+        "Senderid": widget.senderid,
+        "Reciverid": widget.receiveid,
+        "participants": {widget.senderid: true, widget.receiveid: true}
+      });
+      roomid = "${widget.senderid}${widget.receiveid}";
     }
+  }
 
+  ridearrivedcheck() {
+    rides.doc(widget.rideid).snapshots().listen((event) {
+      Map<String, dynamic> users = event["users"];
+      setState(() {
+        try {
+          isarrived = users.entries
+              .firstWhere((element) => element.key == widget.receiveid)
+              .value["arrived"];
+        } catch (e) {
+          isarrived = false;
+        }
+      });
+    });
+  }
+
+  ridestartcheck() {
+    rides.doc(widget.rideid).snapshots().listen((event) {
+      Map<String, dynamic> users = event["users"];
+      setState(() {
+        try {
+          isstart = users.entries
+              .firstWhere((element) => element.key == widget.receiveid)
+              .value["start"];
+        } catch (e) {
+          isstart = false;
+        }
+      });
+    });
   }
 
   @override
@@ -92,17 +133,29 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
             child: Row(
               children: [
                 Container(
-                    margin: const EdgeInsets.all(0),
-                    height: 50,
-                    width: 47,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                    ),
-                    child: const CircleAvatar(
-                      backgroundImage: NetworkImage(
-                        "https://media.istockphoto.com/id/1309328823/photo/headshot-portrait-of-smiling-male-employee-in-office.jpg?b=1&s=170667a&w=0&k=20&c=MRMqc79PuLmQfxJ99fTfGqHL07EDHqHLWg0Tb4rPXQc=",
-                      ),
-                    )),
+                  margin: const EdgeInsets.all(0),
+                  height: 50,
+                  width: 47,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                  ),
+                  child: (widget.imageurl.isNotEmpty)
+                      ? CircleAvatar(
+                          backgroundImage: NetworkImage(
+                            widget.imageurl,
+                          ),
+                        )
+                      : Container(
+                          padding: EdgeInsets.zero,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(100)),
+                          child: const Icon(
+                            CupertinoIcons.person_circle,
+                            color: Colors.white,
+                            size: 50,
+                          ),
+                        ),
+                ),
                 Container(
                   margin: const EdgeInsets.only(left: 10, top: 5),
                   child: Column(
@@ -110,7 +163,7 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                     children: [
                       Container(
                           child: Text(
-                        "Customer Name",
+                        widget.customername,
                         style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontSize: 13,
@@ -133,13 +186,11 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                             width: 30,
                           ),
                           InkWell(
-                            onTap: ()async {
-                             await createchatroom();
-                              
-                                messageprovider.setRoomId(
-                                   roomid);
-                              
-                              
+                            onTap: () async {
+                              await createchatroom();
+
+                              messageprovider.setRoomId(roomid);
+
                               messageprovider.setItemCount(1);
                               messageprovider.setClick();
                             },
@@ -167,7 +218,11 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                             width: 20,
                           ),
                           InkWell(
-                            onTap: () {},
+                            onTap: () async {
+                              Uri phoneno =
+                                  Uri.parse("tel:${widget.usercontact}");
+                              await launchUrl(phoneno);
+                            },
                             child: Container(
                                 width: 39,
                                 height: 30,
@@ -246,10 +301,12 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                       ),
                     ),
                     Container(
+                      width: 200,
+                      height: 10,
                       margin: const EdgeInsets.only(bottom: 0),
-                      child: const Text(
-                        "Saddar,Karachi",
-                        style: TextStyle(
+                      child: Text(
+                        widget.startingpoint,
+                        style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 10,
                             color: Colors.grey),
@@ -275,12 +332,17 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                             fontWeight: FontWeight.bold, fontSize: 12),
                       ),
                     ),
-                    const Text(
-                      "Hussainabad,Karachi",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                          color: Colors.grey),
+                    Container(
+                      width: 200,
+                      height: 10,
+                      margin: const EdgeInsets.only(bottom: 0),
+                      child: Text(
+                        widget.endpoint,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                            color: Colors.grey),
+                      ),
                     ),
                   ],
                 ),
@@ -322,32 +384,246 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
           const SizedBox(
             height: 25,
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Center(
-                child: Container(
-                  height: 33,
-                  width: 106,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(7),
-                    color: Colors.blue,
-                  ),
-                  child: InkWell(
-                    onTap: () {},
-                    child: Center(
-                      child: Container(
-                          alignment: Alignment.center,
-                          child: const Text(
-                            "Start",
-                            style: TextStyle(color: Colors.white),
-                          )),
+          (widget.afterstart == false)
+              ? Row(
+                  mainAxisAlignment: (isstart)
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.spaceAround,
+                  children: [
+                    (isarrived == false)
+                        ? Container(
+                            height: 33,
+                            width: 106,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              color: Colors.blue,
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                rides.doc(widget.rideid).update({
+                                  "users.${widget.receiveid}.arrived": true,
+                                });
+                              },
+                              child: Center(
+                                child: Container(
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      "Arrived",
+                                      style: TextStyle(color: Colors.white),
+                                    )),
+                              ),
+                            ),
+                          )
+                        : (isstart == false)
+                            ? Container(
+                                height: 33,
+                                width: 106,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(7),
+                                  color: Colors.blue,
+                                ),
+                                child: InkWell(
+                                  onTap: () {
+                                    rides.doc(widget.rideid).update({
+                                      "users.${widget.receiveid}.start": true,
+                                    });
+                                  },
+                                  child: Center(
+                                    child: Container(
+                                        alignment: Alignment.center,
+                                        child: const Text(
+                                          "Start",
+                                          style: TextStyle(color: Colors.white),
+                                        )),
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                height: 33,
+                                width: 106,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(7),
+                                  color: Colors.blue,
+                                ),
+                                child: InkWell(
+                                  onTap: () {},
+                                  child: Center(
+                                    child: Container(
+                                        alignment: Alignment.center,
+                                        child: const Text(
+                                          "End",
+                                          style: TextStyle(color: Colors.white),
+                                        )),
+                                  ),
+                                ),
+                              ),
+                    (isstart == false)
+                        ? Container(
+                            height: 33,
+                            width: 106,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              color: Colors.blue,
+                            ),
+                            child: InkWell(
+                              onTap: () {},
+                              child: Center(
+                                child: Container(
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      "Cencel",
+                                      style: TextStyle(color: Colors.white),
+                                    )),
+                              ),
+                            ),
+                          )
+                        : Container(),
+                  ],
+                )
+              : (isaccept == false)? Row(
+                  mainAxisAlignment: (isstart)
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.spaceAround,
+                  children: [
+                    Container(
+                      height: 33,
+                      width: 106,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(7),
+                        color: Colors.blue,
+                      ),
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            
+                          isaccept = true;
+                          });
+                        },
+                        child: Center(
+                          child: Container(
+                              alignment: Alignment.center,
+                              child: const Text(
+                                "Accept",
+                                style: TextStyle(color: Colors.white),
+                              )),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ],
-          )
+                    Container(
+                      height: 33,
+                      width: 106,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(7),
+                        color: Colors.blue,
+                      ),
+                      child: InkWell(
+                        onTap: () {},
+                        child: Center(
+                          child: Container(
+                              alignment: Alignment.center,
+                              child: const Text(
+                                "Reject",
+                                style: TextStyle(color: Colors.white),
+                              )),
+                        ),
+                      ),
+                    )
+                  ],
+                ) : Row(
+                  mainAxisAlignment: (isstart)
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.spaceAround,
+                  children: [
+                    (isarrived == false)
+                        ? Container(
+                            height: 33,
+                            width: 106,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              color: Colors.blue,
+                            ),
+                            child: InkWell(
+                              onTap: () {
+                                rides.doc(widget.rideid).update({
+                                  "users.${widget.receiveid}.arrived": true,
+                                });
+                              },
+                              child: Center(
+                                child: Container(
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      "Arrived",
+                                      style: TextStyle(color: Colors.white),
+                                    )),
+                              ),
+                            ),
+                          )
+                        : (isstart == false)
+                            ? Container(
+                                height: 33,
+                                width: 106,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(7),
+                                  color: Colors.blue,
+                                ),
+                                child: InkWell(
+                                  onTap: () {
+                                    rides.doc(widget.rideid).update({
+                                      "users.${widget.receiveid}.start": true,
+                                    });
+                                  },
+                                  child: Center(
+                                    child: Container(
+                                        alignment: Alignment.center,
+                                        child: const Text(
+                                          "Start",
+                                          style: TextStyle(color: Colors.white),
+                                        )),
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                height: 33,
+                                width: 106,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(7),
+                                  color: Colors.blue,
+                                ),
+                                child: InkWell(
+                                  onTap: () {},
+                                  child: Center(
+                                    child: Container(
+                                        alignment: Alignment.center,
+                                        child: const Text(
+                                          "End",
+                                          style: TextStyle(color: Colors.white),
+                                        )),
+                                  ),
+                                ),
+                              ),
+                    (isstart == false)
+                        ? Container(
+                            height: 33,
+                            width: 106,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(7),
+                              color: Colors.blue,
+                            ),
+                            child: InkWell(
+                              onTap: () {},
+                              child: Center(
+                                child: Container(
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      "Cencel",
+                                      style: TextStyle(color: Colors.white),
+                                    )),
+                              ),
+                            ),
+                          )
+                        : Container(),
+                  ],
+                )
         ],
       ),
     );

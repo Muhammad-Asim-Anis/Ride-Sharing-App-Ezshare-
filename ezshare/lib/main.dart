@@ -8,6 +8,7 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
+import 'Providers/ridestartprovider.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -27,8 +28,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MessageCardProvider()),
         ChangeNotifierProvider(create: (_) => RideCreateProvider()),
         ChangeNotifierProvider(create: (_) => AuthenticationProvider()),
-         ChangeNotifierProvider(create: (_) => GoogleMapProvider())
-        
+         ChangeNotifierProvider(create: (_) => GoogleMapProvider()),
+         ChangeNotifierProvider(create: (_) => RideStartProvider(),)
       ],
       child: MaterialApp(
         title: 'Ezshare',
@@ -74,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 const SizedBox(height: 200),
                 Center(
                   child: Image.asset(
-                    "assets/images/splashicon.png",
+                    "assets/images/ezshare_logo.png",
                     width: 153,
                     height: 153,
                   ),

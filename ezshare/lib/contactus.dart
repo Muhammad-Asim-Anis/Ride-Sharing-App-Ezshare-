@@ -49,12 +49,14 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
             height: 20,
           ),
           Center(
-            child: Text(
-              "Call",
-              style: GoogleFonts.poppins(
-                  color: Colors.black,
-                  fontSize: 30,
-                  fontWeight: FontWeight.w600),
+            child: InkWell(
+              child: Text(
+                "Call",
+                style: GoogleFonts.poppins(
+                    color: Colors.black,
+                    fontSize: 30,
+                    fontWeight: FontWeight.w600),
+              ),
             ),
           ),
         ],

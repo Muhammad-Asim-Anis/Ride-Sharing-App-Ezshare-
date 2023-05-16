@@ -13,7 +13,7 @@ class _HistoryCardState extends State<HistoryCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 140,
+      height: 140, width: 400,
       decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(7),
@@ -24,7 +24,7 @@ class _HistoryCardState extends State<HistoryCard> {
               spreadRadius: .1,
             )
           ]),
-      margin: const EdgeInsets.all(20),
+      margin: const EdgeInsets.all(5),
       child: Row(
         children: [
           Expanded(

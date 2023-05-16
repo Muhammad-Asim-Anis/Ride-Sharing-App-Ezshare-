@@ -1,4 +1,5 @@
 import 'package:ezshare/Customerscreens/screens/customerhomedrawer.dart';
+import 'package:ezshare/Customerscreens/screens/dynamicridesdetail.dart';
 import 'package:ezshare/Customerscreens/screens/first.dart';
 import 'package:ezshare/Providers/authenticationprovider.dart';
 import 'package:ezshare/phoneauthenticate.dart';
@@ -94,7 +95,7 @@ class _customerhomeState extends State<customerhome> {
               )),
           body:  TabBarView(children: [
             first(userid: widget.userid, username: widget.username,),
-            first(userid: widget.userid, username: widget.username,),
+            DynamicRidesDetailScreen(userid: widget.userid, username: widget.username,),
           ]),
           drawer: CustomerHomeDrawer(
               username: widget.username, userid: widget.userid),

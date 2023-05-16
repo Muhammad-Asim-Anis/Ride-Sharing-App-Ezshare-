@@ -1,23 +1,107 @@
+import 'package:ezshare/Providers/messageprovider.dart';
+import 'package:ezshare/Riderscreens/screens/ridercanceltrip.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RideStartCard extends StatefulWidget {
-  const RideStartCard({super.key});
+  final String userid;
+  final String username;
+  final String ridername;
+  final String vehiclemodel;
+  final String vehicleplatenumber;
+  final int seats;
+  final String time;
+  final String date;
+  final String startingpoint;
+  final String endpoint;
+  final String rideid;
+  final String imageurl;
+  final String vehiclename;
+  final String userstartpoint;
+  final String userendpoint;
+  final String riderid;
+  const RideStartCard(
+      {super.key,
+      required this.userid,
+      required this.username,
+      required this.ridername,
+      required this.vehiclemodel,
+      required this.vehicleplatenumber,
+      required this.seats,
+      required this.time,
+      required this.date,
+      required this.startingpoint,
+      required this.endpoint,
+      required this.rideid,
+      required this.imageurl,
+      required this.vehiclename,
+      required this.userstartpoint,
+      required this.userendpoint,
+      required this.riderid});
 
   @override
   State<RideStartCard> createState() => _RideStartCardState();
 }
 
 class _RideStartCardState extends State<RideStartCard> {
-  
+  CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
+  CollectionReference chats = FirebaseFirestore.instance.collection("Chats");
+  CollectionReference users = FirebaseFirestore.instance.collection("Users");
+  String roomid = "";
+  bool isarrived = false, isstart = false;
+  @override
+  void initState() {
+    super.initState();
+
+    ridestartcheck();
+  }
+
+  createchatroom() async {
+    QuerySnapshot snapshot = await chats
+        .where("participants.${widget.userid}", isEqualTo: true)
+        .where("participants.${widget.riderid}", isEqualTo: true)
+        .get();
+    if (snapshot.docs.isNotEmpty) {
+      for (var element in snapshot.docs) {
+        roomid = element.id;
+      }
+    } else {
+      await chats.doc("${widget.userid}${widget.riderid}").set({
+        "Senderid": widget.userid,
+        "Reciverid": widget.riderid,
+        "participants": {widget.userid: true, widget.riderid: true}
+      });
+      roomid = "${widget.userid}${widget.riderid}";
+    }
+  }
+
+  ridestartcheck() {
+    rides.doc(widget.rideid).snapshots().listen((event) {
+      Map<String, dynamic> users = event["users"];
+      setState(() {
+        try {
+          isstart = users.entries
+              .firstWhere((element) => element.key == widget.userid)
+              .value["start"];
+        } catch (e) {
+          isstart = false;
+        }
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-   
-   
+    final messageprovider = Provider.of<MessageCardProvider>(context);
+
     return Container(
       margin: const EdgeInsets.all(15),
       width: 300,
-      height: 430,
+      height: 400,
       decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(7),
@@ -43,15 +127,26 @@ class _RideStartCardState extends State<RideStartCard> {
                 Container(
                     margin: const EdgeInsets.all(0),
                     height: 57,
-                    width: 69,
+                    width: 68,
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                     ),
-                    child: const CircleAvatar(
-                      backgroundImage: NetworkImage(
-                        "https://media.istockphoto.com/id/1309328823/photo/headshot-portrait-of-smiling-male-employee-in-office.jpg?b=1&s=170667a&w=0&k=20&c=MRMqc79PuLmQfxJ99fTfGqHL07EDHqHLWg0Tb4rPXQc=",
-                      ),
-                    )),
+                    child: (widget.imageurl.isNotEmpty)
+                        ? CircleAvatar(
+                            backgroundImage: NetworkImage(
+                              widget.imageurl,
+                            ),
+                          )
+                        : Container(
+                            padding: EdgeInsets.zero,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(100)),
+                            child: const Icon(
+                              CupertinoIcons.person_circle,
+                              color: Colors.white,
+                              size: 70,
+                            ),
+                          )),
                 Container(
                   margin: const EdgeInsets.only(left: 0, top: 12),
                   child: Column(
@@ -65,7 +160,7 @@ class _RideStartCardState extends State<RideStartCard> {
                             children: [
                               SizedBox(
                                   child: Text(
-                                "Rider Name",
+                                widget.ridername,
                                 style: GoogleFonts.poppins(
                                     color: Colors.white,
                                     fontSize: 13,
@@ -73,7 +168,7 @@ class _RideStartCardState extends State<RideStartCard> {
                               )),
                               SizedBox(
                                   child: Text(
-                                "Time: 5min",
+                                "Time: ${widget.time}",
                                 style: GoogleFonts.poppins(
                                     color: Colors.white,
                                     fontSize: 13,
@@ -88,8 +183,13 @@ class _RideStartCardState extends State<RideStartCard> {
                             child: Row(
                               children: [
                                 InkWell(
-                                  onTap: () {
-                                     
+                                  onTap: () async {
+                                    await createchatroom();
+
+                                    messageprovider.setRoomId(roomid);
+
+                                    messageprovider.setItemCount(1);
+                                    messageprovider.setClick();
                                   },
                                   child: Container(
                                       width: 39,
@@ -117,7 +217,17 @@ class _RideStartCardState extends State<RideStartCard> {
                                   width: 20,
                                 ),
                                 InkWell(
-                                  onTap: () {},
+                                  onTap: () async {
+                                    String number = "";
+                                    await users
+                                        .doc(widget.riderid)
+                                        .get()
+                                        .then((value) {
+                                      number = value["id"];
+                                    });
+                                    Uri phoneno = Uri.parse("tel:$number");
+                                    await launchUrl(phoneno);
+                                  },
                                   child: Container(
                                       width: 39,
                                       height: 30,
@@ -148,7 +258,6 @@ class _RideStartCardState extends State<RideStartCard> {
                       const SizedBox(
                         height: 3,
                       ),
-                      
                     ],
                   ),
                 ),
@@ -207,10 +316,12 @@ class _RideStartCardState extends State<RideStartCard> {
                         ),
                       ),
                       Container(
+                        width: 200,
+                        height: 10,
                         margin: const EdgeInsets.only(bottom: 7),
-                        child: const Text(
-                          "Saddar,Karachi",
-                          style: TextStyle(
+                        child: Text(
+                          widget.startingpoint,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 10,
                               color: Colors.grey),
@@ -224,12 +335,17 @@ class _RideStartCardState extends State<RideStartCard> {
                               fontWeight: FontWeight.bold, fontSize: 12),
                         ),
                       ),
-                      const Text(
-                        "Hussainabad,Karachi",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
-                            color: Colors.grey),
+                      Container(
+                        width: 200,
+                        height: 10,
+                        margin: const EdgeInsets.only(bottom: 0),
+                        child: Text(
+                          widget.endpoint,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                              color: Colors.grey),
+                        ),
                       ),
                     ],
                   ),
@@ -252,14 +368,13 @@ class _RideStartCardState extends State<RideStartCard> {
           Container(
             margin: const EdgeInsets.only(left: 20, top: 10),
             child: Row(
-              
-           mainAxisAlignment: MainAxisAlignment.start,
-           crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(
                   child: Column(
-                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                   crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: const [
                       Icon(
                         Icons.circle,
@@ -287,42 +402,42 @@ class _RideStartCardState extends State<RideStartCard> {
                   ),
                 ),
                 Column(
-                       mainAxisAlignment: MainAxisAlignment.start,
-                       crossAxisAlignment: CrossAxisAlignment.start,
-                      
-                 
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
                       width: 280,
                       child: Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                            margin: const EdgeInsets.only(top: 0, bottom: 2),
-                            child: const Text(
-                              "Pick-up Location",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 12),
-                            ),
-                          ),
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 7),
-                            child: const Text(
-                              "Saddar,Karachi",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                  color: Colors.grey),
-                            ),
-                          ),
+                                margin:
+                                    const EdgeInsets.only(top: 0, bottom: 2),
+                                child: const Text(
+                                  "Pick-up Location",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12),
+                                ),
+                              ),
+                              Container(
+                                width: 200,
+                                height: 10,
+                                margin: const EdgeInsets.only(bottom: 7),
+                                child: Text(
+                                  widget.userstartpoint,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                      color: Colors.grey),
+                                ),
+                              ),
                             ],
                           ),
-                          
-                          
                         ],
                       ),
                     ),
@@ -345,21 +460,25 @@ class _RideStartCardState extends State<RideStartCard> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Column(
-                             mainAxisAlignment: MainAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Container(
-                                margin: const EdgeInsets.only(top: 0, bottom: 2),
+                                margin:
+                                    const EdgeInsets.only(top: 0, bottom: 2),
                                 child: const Text(
                                   "Drop-Off Location",
                                   style: TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 12),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12),
                                 ),
                               ),
-                              const SizedBox(
+                              SizedBox(
+                                width: 200,
+                                height: 10,
                                 child: Text(
-                                  "Hussainabad,Karachi",
-                                  style: TextStyle(
+                                  widget.userendpoint,
+                                  style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 10,
                                       color: Colors.grey),
@@ -367,7 +486,6 @@ class _RideStartCardState extends State<RideStartCard> {
                               ),
                             ],
                           ),
-                         
                         ],
                       ),
                     ),
@@ -395,12 +513,12 @@ class _RideStartCardState extends State<RideStartCard> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Seat Capacity",
+                  "Seat Booked",
                   style: GoogleFonts.poppins(
                     fontSize: 9,
                   ),
                 ),
-                Text("1",
+                Text("${widget.seats}",
                     style: GoogleFonts.poppins(
                       fontSize: 9,
                     ))
@@ -419,63 +537,62 @@ class _RideStartCardState extends State<RideStartCard> {
                     fontSize: 9,
                   ),
                 ),
-                Text("KBR-9050",
+                Text(widget.vehicleplatenumber,
                     style: GoogleFonts.poppins(
                       fontSize: 9,
                     ))
               ],
             ),
           ),
-          Container(
-            width: 286,
-            margin: const EdgeInsets.only(left: 0, top: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Available Seat",
-                  style: GoogleFonts.poppins(
-                    fontSize: 9,
-                  ),
-                ),
-                Text("1",
-                    style: GoogleFonts.poppins(
-                      fontSize: 9,
-                    ))
-              ],
-            ),
-          ),
-           
-         
           const SizedBox(
             height: 40,
           ),
           Center(
-            child: Container(
-              height: 26,
-              width: 106,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(7),
-                color: Colors.blue,
-              ),
-              child: InkWell(
-                onTap: () {
-                  //  Navigator.push(
-                  // context,
-                  // MaterialPageRoute(
-                  //   builder: (context) => const  RiderRideDetailViewScreen(userid: '', username: '',),
-                  // ));
-                },
-                child: Center(
-                  child: Container(
-                      alignment: Alignment.center,
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(color: Colors.white,fontSize: 15),
-                      )),
-                ),
-              ),
-            ),
+            child: (isstart == false)
+                ? Container(
+                    height: 26,
+                    width: 106,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(7),
+                      color: Colors.blue,
+                    ),
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RiderCancelTripScreen(
+                                  date: widget.date,
+                                  endpoint: widget.endpoint,
+                                  imageurl: widget.imageurl,
+                                  rideid: widget.rideid,
+                                  riderid: widget.riderid,
+                                  ridername: widget.ridername,
+                                  seats: widget.seats,
+                                  startingpoint: widget.startingpoint,
+                                  time: widget.time,
+                                  userendpoint: widget.userendpoint,
+                                  userid: widget.userid,
+                                  username: widget.username,
+                                  userstartpoint: widget.userstartpoint,
+                                  vehiclemodel: widget.vehiclemodel,
+                                  vehiclename: widget.vehiclename,
+                                  vehicleplatenumber:
+                                      widget.vehicleplatenumber),
+                            ));
+                      },
+                      child: Center(
+                        child: Container(
+                            alignment: Alignment.center,
+                            child: const Text(
+                              "Cancel",
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 15),
+                            )),
+                      ),
+                    ),
+                  )
+                : Container(),
           )
         ],
       ),

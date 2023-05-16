@@ -18,6 +18,7 @@ import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 
 class CustomerRequestBookingScreen extends StatefulWidget {
+  final String imageurl;
   final String userid;
   final String username;
   final String cardid;
@@ -29,6 +30,12 @@ class CustomerRequestBookingScreen extends StatefulWidget {
   final String date;
   final String startingpoint;
   final String endpoint;
+  final LatLng startlatlong;
+  final LatLng endlatlong;
+  final String vehiclename;
+  final Map<String, dynamic> userdata;
+  final String riderid;
+  
   const CustomerRequestBookingScreen(
       {super.key,
       required this.userid,
@@ -41,7 +48,12 @@ class CustomerRequestBookingScreen extends StatefulWidget {
       required this.date,
       required this.startingpoint,
       required this.endpoint,
-      required this.vehicleplatenumber});
+      required this.vehicleplatenumber,
+      required this.startlatlong,
+      required this.endlatlong,
+      required this.imageurl,
+      required this.vehiclename,
+      required this.userdata, required this.riderid});
 
   @override
   State<CustomerRequestBookingScreen> createState() =>
@@ -64,13 +76,13 @@ class _CustomerRequestBookingScreenState
 
   loadmarker() {
     CustomMarkerMaker()
-        .custommarkerfromasset("assets/images/Vector.png")
+        .custommarkerfromasset("assets/images/Vector.png", 50, 50)
         .then((value) => markerstartimage = value);
     CustomMarkerMaker()
-        .custommarkerfromasset("assets/images/Vector-red.png")
+        .custommarkerfromasset("assets/images/Vector-red.png", 50, 50)
         .then((value) => markerendimage = value);
     CustomMarkerMaker()
-        .custommarkerfromasset("assets/images/usericon.png")
+        .custommarkerfromasset("assets/images/usericon.png", 50, 50)
         .then((value) => usericonmarker = value);
 
     // setState(() {});
@@ -81,19 +93,18 @@ class _CustomerRequestBookingScreenState
       Marker(
           icon: BitmapDescriptor.fromBytes(markerstartimage!),
           markerId: const MarkerId("1"),
-          position: const LatLng(24.91638690588, 67.05699002225725),
+          position: widget.startlatlong,
           infoWindow: const InfoWindow(title: "Source Location")),
       Marker(
           icon: BitmapDescriptor.fromBytes(markerendimage!),
           markerId: const MarkerId("2"),
-          position: const LatLng(24.86060710532393, 67.06982432190705),
+          position: widget.endlatlong,
           infoWindow: const InfoWindow(title: "Destination Location")),
     ];
   }
 
   loaddata() {
     getusercurrentposition().then((value) async {
-      
       latitude = value.latitude;
       longitude = value.longitude;
 
@@ -112,9 +123,9 @@ class _CustomerRequestBookingScreenState
       // double distanceInMeters = Geolocator.distanceBetween(24.918617835716166,
       //     67.06161098335912, 24.86059737681838, 67.06993161219316);
       // print(distanceInMeters / 1000);
-      
+
       loadmarkerdata();
-     marker.add(
+      marker.add(
         Marker(
           icon: BitmapDescriptor.fromBytes(usericonmarker!),
           markerId: const MarkerId("3"),
@@ -122,10 +133,7 @@ class _CustomerRequestBookingScreenState
           infoWindow: const InfoWindow(title: "user location"),
         ),
       );
-      setState(() {
-        
-      });
-     
+      setState(() {});
     });
   }
 
@@ -140,12 +148,10 @@ class _CustomerRequestBookingScreenState
         desiredAccuracy: LocationAccuracy.high);
   }
 
-  addmarker(GoogleMapProvider value)
-  {
-     for (var element in  marker) {
-                      
-                       value.markers.add(element);
-                       }       
+  addmarker(GoogleMapProvider value) {
+    for (var element in marker) {
+      value.markers.add(element);
+    }
   }
 
   @override
@@ -224,74 +230,43 @@ class _CustomerRequestBookingScreenState
           )
         ],
       ),
-      body: 
-          // loadmarker();
-        
-          // value.setMarker(
-          //   Marker(
-          //       icon: BitmapDescriptor.fromBytes(markerstartimage!),
-          //       markerId: const MarkerId("1"),
-          //       position: const LatLng(24.91638690588, 67.05699002225725),
-          //       infoWindow: const InfoWindow(title: "Source Location")),
-          // );
-          // value.setMarker(
-          //   Marker(
-          //       icon: BitmapDescriptor.fromBytes(markerendimage!),
-          //       markerId: const MarkerId("2"),
-          //       position: const LatLng(24.86060710532393, 67.06982432190705),
-          //       infoWindow: const InfoWindow(title: "Destination Location")),
-          // );
-          //  value.setMarker(
-          //   Marker(
-          //     icon: BitmapDescriptor.fromBytes(usericonmarker!),
-          //     markerId: const MarkerId("3"),
-          //     position: LatLng(latitude, longitude),
-          //     infoWindow: const InfoWindow(title: "user location"),
-          //   ),
-          // );
-          // value.setMarker( Marker(
-          //   icon: BitmapDescriptor.fromBytes(usericonmarker!),
-          //   markerId: const MarkerId("3"),
-          //   position: LatLng(latitude, longitude),
-          //   infoWindow: const InfoWindow(title: "user location"),
-          // ),);
-          Stack(
-            children: [
-              Consumer<GoogleMapProvider>(builder: (context, value, child) {
-                loadmarker();
-                addmarker(value);
-                return  GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                        target: LatLng(latitude, longitude), zoom: 14.4746),
-                    mapType: MapType.normal,
-                    zoomControlsEnabled: false,
-                    compassEnabled: false,
-                    onMapCreated: (control) async {
-                      controller.complete(control);
-                        
-                    },
-                     onTap: (argument) {
-                    
-                    print(value.markers);
-                    },
-                    onCameraMove: (position) {
-                      value.updatePosition(position.target);
-                    },
-                    markers: value.markers.toSet()
-                    ); 
-              },
-                
-              ),
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.all(5),
-                  child: const Icon(Icons.location_on,
-                      size: 50, color: Colors.blueAccent),
-                ),
-              )
-            ],
+      body: Stack(
+        children: [
+          Consumer<GoogleMapProvider>(
+            builder: (context, value, child) {
+              loadmarker();
+              addmarker(value);
+              return GoogleMap(
+                initialCameraPosition: CameraPosition(
+                    target: LatLng(latitude, longitude), zoom: 14.4746),
+                mapType: MapType.normal,
+                zoomControlsEnabled: false,
+                compassEnabled: false,
+                onMapCreated: (control) async {
+                  controller.complete(control);
+                },
+                onCameraMove: (position) {
+                  value.updatePosition(position.target);
+                },
+                markers: value.markers.toSet(),
+                polylines: <Polyline>{
+                  Polyline(
+                      polylineId: const PolylineId("1"),
+                      color: Colors.blueAccent,
+                      points: <LatLng>[widget.startlatlong,widget.endlatlong])
+                },
+              );
+            },
           ),
-      
+          Center(
+            child: Container(
+              margin: const EdgeInsets.all(5),
+              child: const Icon(Icons.location_on,
+                  size: 50, color: Colors.blueAccent),
+            ),
+          )
+        ],
+      ),
       bottomNavigationBar: DraggableScrollableSheet(
         initialChildSize: .6,
         minChildSize: .1,
@@ -302,11 +277,15 @@ class _CustomerRequestBookingScreenState
               child: Consumer<MessageCardProvider>(
                 builder: (BuildContext context, value, Widget? child) {
                   return (value.isClick)
-                      ? CustomerMessageCard(
-                          userid: widget.userid,
+                      ? CustomerMessageCard(reciverid: widget.riderid,
+                        imageurl: widget.imageurl,
+                          senderid: widget.userid,
                           username: widget.username,
                         )
                       : CustomerRequestBookingCard(
+                        riderid: widget.riderid,
+                          vehiclename: widget.vehiclename,
+                          imageurl: widget.imageurl,
                           date: widget.date,
                           endpoint: widget.endpoint,
                           ridername: widget.ridername,
@@ -318,6 +297,7 @@ class _CustomerRequestBookingScreenState
                           vehiclemodel: widget.vehiclemodel,
                           vehicleplatenumber: widget.vehicleplatenumber,
                           rideid: widget.cardid,
+                          userdata: widget.userdata,
                         );
                 },
               ));

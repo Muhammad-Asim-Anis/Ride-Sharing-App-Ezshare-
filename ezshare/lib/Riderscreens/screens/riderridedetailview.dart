@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezshare/Riderscreens/screens/custommarker.dart';
 import 'package:ezshare/Riderscreens/screens/riderridedetails.dart';
@@ -10,7 +9,6 @@ import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
-
 import '../../Customerscreens/widgets/messagecard.dart';
 import '../../Providers/messageprovider.dart';
 
@@ -20,13 +18,15 @@ class RiderRideDetailViewScreen extends StatefulWidget {
   final String cardid;
   final List<Location> sourcelist;
   final List<Location> destinationlist;
+  final int userlength;
   const RiderRideDetailViewScreen(
       {super.key,
       required this.userid,
       required this.username,
       required this.cardid,
       required this.sourcelist,
-      required this.destinationlist});
+      required this.destinationlist,
+      required this.userlength});
 
   @override
   State<RiderRideDetailViewScreen> createState() =>
@@ -53,11 +53,11 @@ class _RiderRideDetailViewScreenState extends State<RiderRideDetailViewScreen> {
     endlatitude = widget.destinationlist.last.latitude;
     endlongitude = widget.destinationlist.last.longitude;
     CustomMarkerMaker()
-        .custommarkerfromasset("assets/images/Vector-blue-dot.png")
+        .custommarkerfromasset("assets/images/Vector-blue-dot.png", 50, 50)
         .then((value) => markerimage = value);
 
     CustomMarkerMaker()
-        .custommarkerfromasset("assets/images/Vector-red.png")
+        .custommarkerfromasset("assets/images/Vector-red.png", 50, 50)
         .then((value) => markerimage2 = value);
 
     setState(() {});
@@ -151,19 +151,23 @@ class _RiderRideDetailViewScreenState extends State<RiderRideDetailViewScreen> {
             infoWindow: const InfoWindow(title: "destination Location"),
           )
         },
-        polylines:  <Polyline>{
-              Polyline(
-  polylineId: const  PolylineId('polyline_1'),
-  color: Colors.blue,
-  points: <LatLng>[
-    LatLng(startlatitude, startlongitude),
-    LatLng(endlatitude, endlongitude)
-  ],
-)
+        polylines: <Polyline>{
+          Polyline(
+            polylineId: const PolylineId('polyline_1'),
+            color: Colors.blue,
+            points: <LatLng>[
+              LatLng(startlatitude, startlongitude),
+              LatLng(endlatitude, endlongitude)
+            ],
+          )
         },
       ),
       bottomNavigationBar: DraggableScrollableSheet(
-        initialChildSize: (messageprovider.isClick) ? .7 : .6,
+        initialChildSize: (widget.userlength != 0)
+            ? (messageprovider.isClick)
+                ? .7
+                : .6
+            : .1,
         minChildSize: .1,
         maxChildSize: .7,
         expand: false,
@@ -174,60 +178,175 @@ class _RiderRideDetailViewScreenState extends State<RiderRideDetailViewScreen> {
                 if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                List<dynamic> users = snapshot.data!.get("users");
-                //  for (var element in users) {
-                //      print(element);
-                //   }
-                return ListView.builder(
-                  controller: scrollController,
-                  shrinkWrap: true,
-                  itemCount: (messageprovider.isClick)
-                      ? messageprovider.itemcount
-                      : users.length,
-                  itemBuilder: (context, index) {
-                    if (!snapshot.hasData) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    return Consumer<MessageCardProvider>(
-                        builder: (BuildContext context, value, Widget? child) {
-                      return (value.isClick)
-                          ? CustomerMessageCard(
-                              userid: widget.userid,
-                              username: widget.username,
-                            )
-                          : InkWell(
-                              onTap: () async {
-                                startlatitude = 24.86060710532393;
-                                startlongitude = 67.06985650841366;
-                                endlatitude = 24.872316989499012;
-                                endlongitude = 67.03401310841409;
+                String riderid = snapshot.data!.get("Riderid");
+                Map<String, dynamic> users = snapshot.data!.get("users");
+                bool ridestart;
+                try {
+                  ridestart = snapshot.data!.get("ridestart");
+                } catch (e) {
+                  ridestart = false;
+                }
+                return Column(
+                  children: [
+                    (widget.userlength != 0)
+                        ? Align(
+                            alignment: Alignment.topRight,
+                            child: (ridestart != true)
+                                ? InkWell(
+                                    onTap: () async {
+                                      await rides
+                                          .doc(widget.cardid)
+                                          .update({"ridestart": true});
+                                    },
+                                    child: Container(
+                                        width: 100,
+                                        height: 40,
+                                        margin:
+                                            const EdgeInsets.only(right: 20),
+                                        decoration: BoxDecoration(
+                                            color: Colors.blueAccent,
+                                            borderRadius:
+                                                BorderRadius.circular(100),
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                color:
+                                                    Color.fromARGB(50, 0, 0, 0),
+                                                spreadRadius: 0,
+                                                blurRadius: 4,
+                                                offset: Offset(0, 4),
+                                              )
+                                            ]),
+                                        child: const Center(
+                                          child: Text("On my way",
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        )),
+                                  )
+                                : InkWell(
+                                    onTap: () async {},
+                                    child: Container(
+                                        width: 100,
+                                        height: 40,
+                                        margin:
+                                            const EdgeInsets.only(right: 20),
+                                        decoration: BoxDecoration(
+                                            color: Colors.blueAccent,
+                                            borderRadius:
+                                                BorderRadius.circular(100),
+                                            boxShadow: const [
+                                              BoxShadow(
+                                                color:
+                                                    Color.fromARGB(50, 0, 0, 0),
+                                                spreadRadius: 0,
+                                                blurRadius: 4,
+                                                offset: Offset(0, 4),
+                                              )
+                                            ]),
+                                        child: const Center(
+                                          child: Text("end",
+                                              style: TextStyle(
+                                                  color: Colors.white)),
+                                        )),
+                                  ),
+                          )
+                        : Container(),
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        shrinkWrap: true,
+                        itemCount: (messageprovider.isClick)
+                            ? messageprovider.itemcount
+                            : users.length,
+                        itemBuilder: (context, index) {
+                          bool afterridestart = false;
+                          try {
+                            afterridestart = users.entries
+                                .elementAt(index)
+                                .value["afterstart"];
+                          } catch (e) {
+                            afterridestart = false;
+                          }
+                          if (!snapshot.hasData) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          }
+                          return Consumer<MessageCardProvider>(builder:
+                              (BuildContext context, value, Widget? child) {
+                            return (value.isClick)
+                                ? CustomerMessageCard(
+                                    senderid: riderid,
+                                    imageurl: users.entries
+                                        .elementAt(index)
+                                        .value["customerimageurl"],
+                                    reciverid: widget.userid,
+                                    username: widget.username,
+                                  )
+                                : InkWell(
+                                    onTap: () async {
+                                      List<Location> start =
+                                          await locationFromAddress(users
+                                              .entries
+                                              .elementAt(index)
+                                              .value["pickup"]);
+                                      List<Location> end =
+                                          await locationFromAddress(users
+                                              .entries
+                                              .elementAt(index)
+                                              .value["drop off"]);
+                                      startlatitude = start.first.latitude;
+                                      startlongitude = start.first.longitude;
+                                      endlatitude = end.first.latitude;
+                                      endlongitude = end.first.longitude;
 
-                                final GoogleMapController googleMapController =
-                                    await controller.future;
-                                googleMapController.animateCamera(
-                                    CameraUpdate.newCameraPosition(
-                                  CameraPosition(
-                                      target:
-                                          LatLng(startlatitude, endlongitude),
-                                      zoom: 13),
-                                ));
+                                      final GoogleMapController
+                                          googleMapController =
+                                          await controller.future;
+                                      googleMapController.animateCamera(
+                                          CameraUpdate.newCameraPosition(
+                                        CameraPosition(
+                                            target: LatLng(
+                                                startlatitude, endlongitude),
+                                            zoom: 13),
+                                      ));
 
-                                setState(() {});
-                              },
-                              child: CustomerBookCard(
-                                customername: "Asim",
-                                vehiclemodel: "Honda-789",
-                                seats: 1,
-                                time: "2:00 PM",
-                                date: "12-5-2023",
-                                startingpoint: "hussainabad",
-                                endpoint: "Sadar",
-                                receiveid: widget.userid,
-                                senderid: users[index],
-                              ),
-                            );
-                    });
-                  },
+                                      setState(() {});
+                                    },
+                                    child: CustomerBookCard(
+                                      afterstart: afterridestart,
+                                      rideid: widget.cardid,
+                                      usercontact: users.entries
+                                          .elementAt(index)
+                                          .value["Customer Number"],
+                                      imageurl: users.entries
+                                          .elementAt(index)
+                                          .value["customerimageurl"],
+                                      customername: users.entries
+                                          .elementAt(index)
+                                          .value["Customer Name"],
+                                      vehiclemodel:
+                                          snapshot.data!.get("VehicleNumber"),
+                                      seats: users.entries
+                                          .elementAt(index)
+                                          .value["Seats booked"],
+                                      time: snapshot.data!.get("SelectedTime"),
+                                      date: snapshot.data!.get("SelectedDate"),
+                                      startingpoint: users.entries
+                                          .elementAt(index)
+                                          .value["pickup"],
+                                      endpoint: users.entries
+                                          .elementAt(index)
+                                          .value["drop off"],
+                                      receiveid: (users.isEmpty)
+                                          ? ""
+                                          : users.entries.elementAt(index).key,
+                                      senderid: riderid,
+                                    ),
+                                  );
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 );
               });
         },

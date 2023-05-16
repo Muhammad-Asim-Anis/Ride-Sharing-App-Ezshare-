@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ezshare/Providers/ridecreateprovider.dart';
 import 'package:ezshare/Riderscreens/screens/riderdestinationserach.dart';
 import 'package:ezshare/Riderscreens/widgets/riderridecreateinfocard.dart';
@@ -37,23 +39,52 @@ class RiderRideCreateInfoScreen extends StatefulWidget {
 
 class _RiderRideCreateInfoScreenState extends State<RiderRideCreateInfoScreen> {
   Uint8List? markerimage, sourceimage;
+  List<LatLng> markerlist = [];
+  List<Marker> markers = [];
+  final Completer<GoogleMapController> controller = Completer();
   @override
   void initState() {
     super.initState();
-    loadmarker();
+     loadmarker();
+     
+    for (var element in widget.polylines) { 
+
+      markerlist.add(element);
+    
+    }
+   
      
   }
 
-  
+  loadmarkerdata()
+  {
+      markers.add( Marker(
+              icon: BitmapDescriptor.fromBytes(sourceimage!),
+              markerId: const MarkerId("1"),
+              position:   LatLng(widget.sourcelist.last.latitude, widget.sourcelist.last.longitude),
+              infoWindow:  InfoWindow(title:  widget.sourcelocation)),
+         );
+    markers.add( Marker(
+            markerId: const MarkerId("2"),
+            icon: BitmapDescriptor.fromBytes(markerimage!),
+            position:  LatLng(widget.destinationlist.last.latitude, widget.destinationlist.last.longitude),
+            infoWindow:  InfoWindow(title: widget.destinationlocation),
+          )); 
+          setState(() {
+            
+          });    
+  }
 
   loadmarker() {
+
     setState(() {
        CustomMarkerMaker()
-          .custommarkerfromasset("assets/images/Vector-blue-dot.png")
+          .custommarkerfromasset("assets/images/Vector-blue-dot.png",50,50)
           .then((value) => markerimage = value);
       CustomMarkerMaker()
-          .custommarkerfromasset("assets/images/Vector-red.png")
+          .custommarkerfromasset("assets/images/Vector-red.png",50,50)
           .then((value) => sourceimage = value);
+           
     });
   }
 
@@ -139,27 +170,15 @@ class _RiderRideCreateInfoScreenState extends State<RiderRideCreateInfoScreen> {
             target: LatLng(widget.sourcelist.last.latitude, widget.sourcelist.last.longitude), zoom: 14.4746),
         mapType: MapType.normal,
         zoomControlsEnabled: false,
-        onMapCreated: (controller) async { 
-          
-           loadmarker();
+        onMapCreated: (control)  { 
+          controller.complete(control);
+          loadmarkerdata();
         },
-        markers: <Marker>{
-          Marker(
-              icon: (sourceimage == null)? BitmapDescriptor.defaultMarker:  BitmapDescriptor.fromBytes(sourceimage!),
-              markerId: const MarkerId("1"),
-              position:   LatLng(widget.sourcelist.last.latitude, widget.sourcelist.last.longitude),
-              infoWindow:  InfoWindow(title:  widget.sourcelocation)),
-          Marker(
-            markerId: const MarkerId("2"),
-            icon: (markerimage == null)? BitmapDescriptor.defaultMarker: BitmapDescriptor.fromBytes(markerimage!),
-            position:  LatLng(widget.destinationlist.last.latitude, widget.destinationlist.last.longitude),
-            infoWindow:  InfoWindow(title: widget.destinationlocation),
-          )
-        },
+        markers: markers.toSet(),
         polylines: <Polyline>{
           Polyline(
               polylineId: const PolylineId('polyline_id'),
-              points: widget.polylines,
+              points: markerlist,
               color: Colors.blueAccent,
               width: 4)
         },

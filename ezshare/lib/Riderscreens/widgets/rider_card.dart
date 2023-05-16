@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_unnecessary_containers
 
 import 'package:ezshare/Riderscreens/screens/riderridedetailview.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -16,6 +17,8 @@ class RiderCard extends StatefulWidget {
   final String startingpoint;
   final String endpoint;
   final String cardid;
+  final Map<String, dynamic> usersData; 
+  final String imageurl;
   const RiderCard(
       {super.key,
       required this.ridername,
@@ -27,7 +30,7 @@ class RiderCard extends StatefulWidget {
       required this.endpoint,
       required this.userid,
       required this.username,
-      required this.cardid});
+      required this.cardid, required this.usersData, required this.imageurl});
 
   @override
   State<RiderCard> createState() => _RiderCardState();
@@ -36,6 +39,7 @@ class RiderCard extends StatefulWidget {
 class _RiderCardState extends State<RiderCard> {
   @override
   Widget build(BuildContext context) {
+    // print(widget.imageurl);
     return Container(
       margin: const EdgeInsets.all(15),
       width: 300,
@@ -69,11 +73,20 @@ class _RiderCardState extends State<RiderCard> {
                     decoration: const BoxDecoration(
                       shape: BoxShape.circle,
                     ),
-                    child: const CircleAvatar(
+                    child: (widget.imageurl.isNotEmpty)?  CircleAvatar(
                       backgroundImage: NetworkImage(
-                        "https://media.istockphoto.com/id/1309328823/photo/headshot-portrait-of-smiling-male-employee-in-office.jpg?b=1&s=170667a&w=0&k=20&c=MRMqc79PuLmQfxJ99fTfGqHL07EDHqHLWg0Tb4rPXQc=",
+                        widget.imageurl,
                       ),
-                    )),
+                    ): Container(
+                        padding: EdgeInsets.zero,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(100)),
+                        child: const Icon(
+                          CupertinoIcons.person_circle,
+                          color: Colors.white,
+                          size: 50,
+                        ),
+                      ),) ,
                 Container(
                   margin: const EdgeInsets.only(left: 10, top: 5),
                   child: Column(
@@ -81,7 +94,7 @@ class _RiderCardState extends State<RiderCard> {
                     children: [
                       Container(
                           child: Text(
-                        "Rider Name",
+                        widget.ridername,
                         style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontSize: 13,
@@ -244,7 +257,7 @@ class _RiderCardState extends State<RiderCard> {
                     fontSize: 12,
                   ),
                 ),
-                Text("Seat Booked: 1",
+                Text("Seat Booked:  ${widget.usersData.length}",
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                     ))
@@ -278,11 +291,12 @@ class _RiderCardState extends State<RiderCard> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => RiderRideDetailViewScreen(
+                            
                               userid: widget.userid,
                               username: widget.username,
                               cardid: widget.cardid,
                               destinationlist: locationsdestination,
-                              sourcelist: locationssource,
+                              sourcelist: locationssource, userlength: widget.usersData.length,
                             ),
                           ));
                     },

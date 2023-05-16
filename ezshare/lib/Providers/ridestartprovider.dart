@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class GoogleMapProvider extends ChangeNotifier {
-  List<Marker> _markers = [];
+class RideStartProvider extends ChangeNotifier {
+  List<Marker> _markers = []; Map<String,dynamic> _userdata = {};
   String _startingaddress = "your pickup location here", _endaddress = "your dropoff locatiom here";
   LatLng _position = const LatLng(0, 0);
   bool _pickup = false, _dropoff = false;
@@ -16,11 +16,20 @@ class GoogleMapProvider extends ChangeNotifier {
   bool get pickup => _pickup;
   bool get dropoff => _dropoff;
   List<Marker> get markers => _markers;
+  Map<String,dynamic> get userdata => _userdata;
   double get latitude => _latitude;
   double get longitude => _longitude;
   String get startingaddress => _startingaddress;
   String get endaddress => _endaddress;
-  
+  void setmapuserdata(Map<String,dynamic> data){
+     _userdata = data;
+     notifyListeners();
+  }
+  void unsetmapuserdata()
+  {
+     _userdata = {};
+     notifyListeners();
+  }
    void setDistance(double distance)
   {
     _distance = distance;

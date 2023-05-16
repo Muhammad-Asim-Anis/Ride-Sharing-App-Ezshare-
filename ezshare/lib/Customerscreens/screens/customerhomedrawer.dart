@@ -1,6 +1,10 @@
+import 'package:ezshare/BookingandHistoryscreens/screens/history_screen.dart';
+import 'package:ezshare/BookingandHistoryscreens/screens/wallet_screen.dart';
+import 'package:ezshare/Customerscreens/screens/customerbookedrides.dart';
 import 'package:ezshare/Customerscreens/screens/cutomer_home.dart';
 import 'package:ezshare/Riderscreens/screens/riderdestination.dart';
 import 'package:ezshare/aftersplashscreen.dart';
+import 'package:ezshare/contactus.dart';
 import 'package:ezshare/homedrawer.dart';
 import 'package:ezshare/phoneauthenticate.dart';
 import 'package:ezshare/profilepage.dart';
@@ -149,11 +153,37 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
                 border: Border.all(color: Colors.black)),
             child: ListTile(
                 onTap: () {
-                  // Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(
-                  //       builder: (context) => const Cart(email: '', name: ''),
-                  //     ));
+                 Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>   CustomerBookedRidesScreen(userid: widget.userid,username: widget.username),
+                        ));
+                },
+                leading: const Icon(
+                  Icons.calendar_month_outlined,
+                  color: Color.fromARGB(225, 0, 157, 207),
+                ),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios_outlined,
+                  color: Colors.black,
+                ),
+                title: const Text(
+                  "Booked Ride",
+                  style: TextStyle(color: Colors.black),
+                )),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.black)),
+            child: ListTile(
+                onTap: () {
+                  Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const  HistoryScreen(),
+                        ));
                 },
                 leading: const Icon(
                   Icons.history,
@@ -205,7 +235,11 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
                 border: Border.all(color: Colors.black)),
             child: ListTile(
                 onTap: () {
-                  // Navigator.pushNamed(context, '/Products');
+                 Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const  WalletScreen(),
+                        ));
                 },
                 leading: const Icon(
                   Icons.account_balance_wallet_outlined,
@@ -227,7 +261,12 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
                 border: Border.all(color: Colors.black)),
             child: ListTile(
                 onTap: () {
-                  // Navigator.pushNamed(context, '/Register');
+                     Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const  ContactUsScreen(),
+                        ));
+        
                 },
                 leading: const Icon(
                   CupertinoIcons.phone,
@@ -250,7 +289,7 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
              });
             },
             child: Container(
-              margin: const EdgeInsets.only(top: 100),
+              margin: const EdgeInsets.only(top: 40),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -262,7 +301,8 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
                 ],
               ),
             ),
-          )
+          ),
+          
         ],
       ),
     );

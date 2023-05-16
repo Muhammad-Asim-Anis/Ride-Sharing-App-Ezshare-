@@ -47,7 +47,7 @@ class _RiderDestinationSetScreenState extends State<RiderDestinationSetScreen> {
   loadmarker() {
     setState(() {
       CustomMarkerMaker()
-          .custommarkerfromasset("assets/images/Vector.png")
+          .custommarkerfromasset("assets/images/Vector.png",50,50)
           .then((value) => markerimage = value);
     });
   }

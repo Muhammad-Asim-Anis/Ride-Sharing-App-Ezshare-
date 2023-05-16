@@ -1,9 +1,28 @@
+import 'package:ezshare/Customerscreens/screens/customerbookedrides.dart';
+import 'package:ezshare/Customerscreens/screens/customerbookingstart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:page_transition/page_transition.dart';
 
 class RiderCancelTripScreen extends StatefulWidget {
-  const RiderCancelTripScreen({super.key});
+   final String userid;
+  final String username;
+  final String ridername;
+  final String vehiclemodel;
+  final String vehicleplatenumber;
+  final int seats;
+  final String time;
+  final String date;
+  final String startingpoint;
+  final String endpoint;
+  final String rideid;
+  final String imageurl;
+  final String vehiclename;
+  final String userstartpoint;
+  final String userendpoint;
+  final String riderid;
+  const RiderCancelTripScreen({super.key, required this.userid, required this.username, required this.ridername, required this.vehiclemodel, required this.vehicleplatenumber, required this.seats, required this.time, required this.date, required this.startingpoint, required this.endpoint, required this.rideid, required this.imageurl, required this.vehiclename, required this.userstartpoint, required this.userendpoint, required this.riderid});
 
   @override
   State<RiderCancelTripScreen> createState() => _RiderCancelTripScreenState();
@@ -40,7 +59,9 @@ class _RiderCancelTripScreenState extends State<RiderCancelTripScreen> {
             width: 10,
             height: 10,
             child: IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pop(context);
+                },
                 icon: const Icon(
                   CupertinoIcons.multiply,
                   size: 30,
@@ -132,16 +153,11 @@ class _RiderCancelTripScreenState extends State<RiderCancelTripScreen> {
             ),
             InkWell(
                       onTap: () async {
-                        // Navigator.push(
-                        //     context,
-                        //     PageTransition(
-                        //         type: PageTransitionType.rightToLeftWithFade,
-                        //         child: RiderRideCreateInfoScreen(
-                        //           destinationlocation: destinationlocation.text,
-                        //           sourcelocation: sourcelocation.text,
-                        //           userid: widget.userid,
-                        //           username: widget.username,
-                        //         )));
+                        Navigator.push(
+                            context,
+                            PageTransition(
+                                type: PageTransitionType.rightToLeftWithFade,
+                                child: CustomerBookedRidesScreen(userid: widget.userid, username: widget.username) ));
                       },
                       hoverColor: Colors.white,
                       child: Center(

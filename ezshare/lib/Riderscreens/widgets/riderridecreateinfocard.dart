@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezshare/Providers/ridecreateprovider.dart';
 import 'package:ezshare/Riderscreens/screens/riderdestination.dart';
+import 'package:ezshare/successlogin.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,9 +25,14 @@ class RiderRiderCreateInfoCard extends StatefulWidget {
 class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
   bool setLoading = false;
   CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
-  riderridedetailsadd(
+  CollectionReference users = FirebaseFirestore.instance.collection("Users");
+  String imageurl = "";
+  riderridedetailsadd(String image,
       String vehiclename, String vehiclenumber, String isVehicle,String source,String destination) async {
     await rides.add({
+      "imageurl" : image,
+      "users": {},
+      "Rider Contact": SuccessPage.user!.phoneNumber,
       "Ridername": widget.username,
       "Riderid": widget.userid,
       "Time": widget.time.toString(),
@@ -575,7 +581,18 @@ class _RiderRiderCreateInfoCardState extends State<RiderRiderCreateInfoCard> {
                       onTap: () async  { setState(() {
                         setLoading = true;
                       }); 
-                        await riderridedetailsadd(vehiclename.text,vehiclenumber.text,ridecreateprovider.isVehicle,ridecreateprovider.sourcelocation,ridecreateprovider.destinationlocation);
+                      await users.doc(widget.userid).get().then((value) {
+                        try {
+                          imageurl = value["imageurl"];
+                        } catch (e) {
+                          imageurl = "";
+                        }
+                       } 
+                       
+                       );
+
+
+                        await riderridedetailsadd(imageurl,vehiclename.text,vehiclenumber.text,ridecreateprovider.isVehicle,ridecreateprovider.sourcelocation,ridecreateprovider.destinationlocation);
                          setState(() {
                            
                          setLoading = false;

@@ -1,20 +1,18 @@
 // ignore_for_file: camel_case_types, avoid_unnecessary_containers
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezshare/Customerscreens/screens/customerbookingstart.dart';
 import 'package:ezshare/Customerscreens/screens/customerrequestbooking.dart';
 import 'package:ezshare/Providers/googlemapprovider.dart';
 import 'package:ezshare/Providers/ridestartprovider.dart';
 import 'package:ezshare/Riderscreens/screens/custommarker.dart';
 import 'package:flutter/cupertino.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
-class rideCard extends StatefulWidget {
+class RequestRideCard extends StatefulWidget {
   final String userid;
   final String username;
   final String ridername;
@@ -30,8 +28,7 @@ class rideCard extends StatefulWidget {
   final Map<String, dynamic> usersdata;
   final String vehiclename;
   final String riderid;
-  
-  const rideCard(
+  const RequestRideCard(
       {super.key,
       required this.ridername,
       required this.vehiclemodel,
@@ -46,13 +43,14 @@ class rideCard extends StatefulWidget {
       required this.vehicleplatenumber,
       required this.imageurl,
       required this.usersdata,
-      required this.vehiclename, required this.riderid});
+      required this.vehiclename,
+      required this.riderid});
 
   @override
-  State<rideCard> createState() => _rideCardState();
+  State<RequestRideCard> createState() => _RequestRideCardState();
 }
 
-class _rideCardState extends State<rideCard> {
+class _RequestRideCardState extends State<RequestRideCard> {
   @override
   Widget build(BuildContext context) {
     final googlemapprovider = Provider.of<GoogleMapProvider>(context);
@@ -345,7 +343,7 @@ class _rideCardState extends State<rideCard> {
                                         child: Container(
                                             alignment: Alignment.center,
                                             child: const Text(
-                                              "Book now",
+                                              "Request",
                                               style: TextStyle(
                                                   color: Colors.white),
                                             ))),
@@ -354,7 +352,7 @@ class _rideCardState extends State<rideCard> {
                                     onTap: () async {
                                       Uint8List? markerstartimage;
                                       Uint8List? markerendimage;
-                                       Uint8List? usermarkerstartimage;
+                                      Uint8List? usermarkerstartimage;
                                       Uint8List? usermarkerendimage;
                                       googlemapprovider.markers.clear();
                                       ridestartprovider.markers.clear();
@@ -413,10 +411,12 @@ class _rideCardState extends State<rideCard> {
                                           MaterialPageRoute(
                                               builder: (context) =>
                                                   CustomerBookingStartScreen(
-                                                    
+                                                  
                                                     riderid: widget.riderid,
-                                                    usermarkerstartimage: usermarkerstartimage!,
-                                                  usermarkerendimage: usermarkerendimage!,
+                                                    usermarkerstartimage:
+                                                        usermarkerstartimage!,
+                                                    usermarkerendimage:
+                                                        usermarkerendimage!,
                                                     markerendimage:
                                                         markerendimage!,
                                                     markerstartimage:

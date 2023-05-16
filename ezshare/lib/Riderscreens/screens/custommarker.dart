@@ -12,10 +12,10 @@ class CustomMarkerMaker {
         .asUint8List();
   }
 
-  Future<Uint8List> custommarkerfromasset(String path)  async{
+  Future<Uint8List> custommarkerfromasset(String path,int width,int height)  async{
       
       
-    return await getbytesfromAssets(path, 50,50);
+    return await getbytesfromAssets(path, width,height);
     
   }
 }

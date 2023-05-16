@@ -41,7 +41,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return DefaultTabController(
         length: 3,
         child: Scaffold(
-          appBar: AppBar(
+          appBar: AppBar(iconTheme: const IconThemeData(
+                color: Colors.blue,
+              ), 
               backgroundColor: Colors.white,
               title: const Center(
                 child: Text(

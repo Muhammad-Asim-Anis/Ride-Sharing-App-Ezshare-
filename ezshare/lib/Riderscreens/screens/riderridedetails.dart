@@ -6,8 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 class RiderRideBookingDeatilsScreen extends StatefulWidget {
   final String userid;
-  final String username; 
-  const RiderRideBookingDeatilsScreen({super.key, required this.userid, required this.username});
+  final String username;
+  const RiderRideBookingDeatilsScreen(
+      {super.key, required this.userid, required this.username});
 
   @override
   State<RiderRideBookingDeatilsScreen> createState() =>
@@ -16,7 +17,12 @@ class RiderRideBookingDeatilsScreen extends StatefulWidget {
 
 class _RiderRideBookingDeatilsScreenState
     extends State<RiderRideBookingDeatilsScreen> {
-       CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
+  CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
+ 
+ 
+ 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,30 +40,40 @@ class _RiderRideBookingDeatilsScreenState
         ),
       ),
       body: StreamBuilder(
-        stream: rides.where("Riderid",isEqualTo: widget.userid).snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-                    return const Center(child:  CircularProgressIndicator());
-                  }         
-          return ListView.builder(
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder:(context, index) {
-              final DocumentSnapshot ridesdetails =
-                                        snapshot.data!.docs[index];
-            return   Center(
-                child: RiderCard(
-                        ridername: ridesdetails["Ridername"],
-                        vehiclemodel: ridesdetails["VehicleNumber"],
-                        seats: ridesdetails["Seats"],
-                        time: ridesdetails["SelectedTime"],
-                        date: ridesdetails["SelectedDate"],
-                        startingpoint: ridesdetails["SourceLocation"],
-                        endpoint: ridesdetails["DestinationLocation"], userid: widget.userid, username: widget.username, cardid: ridesdetails.id,),
-              );
-          }, );
-        }
-      ),
-      drawer:  HomeDrawer(username: widget.username, userid: widget.userid),
+          stream: rides.snapshots(),
+          builder: (context, snapshot) {
+            
+             
+            if (!snapshot.hasData) {
+             
+              return const Center(child: CircularProgressIndicator());
+            }
+            return ListView.builder(
+              itemCount: snapshot.data!.docs.length,
+              itemBuilder: (context, index) {
+               
+                final DocumentSnapshot ridesdetails =
+                    snapshot.data!.docs[index];
+                return Center(
+                  child: RiderCard(
+                    ridername: ridesdetails["Ridername"],
+                    vehiclemodel: ridesdetails["VehicleNumber"],
+                    seats: ridesdetails["Seats"],
+                    time: ridesdetails["SelectedTime"],
+                    date: ridesdetails["SelectedDate"],
+                    startingpoint: ridesdetails["SourceLocation"],
+                    endpoint: ridesdetails["DestinationLocation"],
+                    userid: widget.userid,
+                    username: widget.username,
+                    cardid: ridesdetails.id,
+                    usersData: ridesdetails["users"],
+                    imageurl: ridesdetails["imageurl"],
+                  ),
+                );
+              },
+            );
+          }),
+      drawer: HomeDrawer(username: widget.username, userid: widget.userid),
     );
   }
 }
