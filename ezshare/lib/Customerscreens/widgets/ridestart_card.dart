@@ -52,12 +52,13 @@ class _RideStartCardState extends State<RideStartCard> {
   CollectionReference chats = FirebaseFirestore.instance.collection("Chats");
   CollectionReference users = FirebaseFirestore.instance.collection("Users");
   String roomid = "";
-  bool isarrived = false, isstart = false;
+  bool isarrived = false, isstart = false, isridestart = false;
   @override
   void initState() {
     super.initState();
-
     ridestartcheck();
+    riderarrivedcheck();
+    rideafterstartcheck();
   }
 
   createchatroom() async {
@@ -80,6 +81,34 @@ class _RideStartCardState extends State<RideStartCard> {
   }
 
   ridestartcheck() {
+    rides.doc(widget.rideid).snapshots().listen((event) {
+     
+      setState(() {
+        try {
+          isridestart = event["ridestart"];
+        } catch (e) {
+          isridestart = false;
+        }
+      });
+    });
+  }
+
+  riderarrivedcheck() {
+    rides.doc(widget.rideid).snapshots().listen((event) {
+      Map<String, dynamic> users = event["users"];
+      setState(() {
+        try {
+          isarrived = users.entries
+              .firstWhere((element) => element.key == widget.userid)
+              .value["arrived"];
+        } catch (e) {
+          isarrived = false;
+        }
+      });
+    });
+  }
+
+  rideafterstartcheck() {
     rides.doc(widget.rideid).snapshots().listen((event) {
       Map<String, dynamic> users = event["users"];
       setState(() {
@@ -562,6 +591,8 @@ class _RideStartCardState extends State<RideStartCard> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => RiderCancelTripScreen(
+                                arrived: isarrived,
+                                  ridestart: isridestart,
                                   date: widget.date,
                                   endpoint: widget.endpoint,
                                   imageurl: widget.imageurl,

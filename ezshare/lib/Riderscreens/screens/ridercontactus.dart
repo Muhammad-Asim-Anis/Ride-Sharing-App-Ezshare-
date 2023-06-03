@@ -1,19 +1,20 @@
-import 'package:ezshare/Customerscreens/screens/customerhomedrawer.dart';
+
+import 'package:ezshare/homedrawer.dart';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class ContactUsScreen extends StatefulWidget {
+class RiderContactUsScreen extends StatefulWidget {
   final String userid;
   final String username;
-  const ContactUsScreen(
+  const RiderContactUsScreen(
       {super.key, required this.userid, required this.username});
 
   @override
-  State<ContactUsScreen> createState() => _ContactUsScreenState();
+  State<RiderContactUsScreen> createState() => _RiderContactUsScreenState();
 }
 
-class _ContactUsScreenState extends State<ContactUsScreen> {
+class _RiderContactUsScreenState extends State<RiderContactUsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,7 +67,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         ],
       ),
       drawer:
-          CustomerHomeDrawer(username: widget.username, userid: widget.userid),
+          HomeDrawer(username: widget.username, userid: widget.userid),
     );
   }
 }

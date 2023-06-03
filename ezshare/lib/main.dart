@@ -2,6 +2,7 @@ import 'package:ezshare/Providers/authenticationprovider.dart';
 import 'package:ezshare/Providers/googlemapprovider.dart';
 import 'package:ezshare/Providers/messageprovider.dart';
 import 'package:ezshare/Providers/ridecreateprovider.dart';
+import 'package:ezshare/Providers/searchprovider.dart';
 import 'package:ezshare/aftersplashscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
@@ -29,7 +30,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => RideCreateProvider()),
         ChangeNotifierProvider(create: (_) => AuthenticationProvider()),
          ChangeNotifierProvider(create: (_) => GoogleMapProvider()),
-         ChangeNotifierProvider(create: (_) => RideStartProvider(),)
+         ChangeNotifierProvider(create: (_) => RideStartProvider()),
+         ChangeNotifierProvider(create: (_) => SearchProvider())
       ],
       child: MaterialApp(
         title: 'Ezshare',

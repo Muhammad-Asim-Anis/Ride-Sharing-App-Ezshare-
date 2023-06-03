@@ -1,15 +1,27 @@
 // ignore_for_file: avoid_unnecessary_containers
+import 'dart:convert';
+
+import 'package:ezshare/Customerscreens/screens/customercanceltrip.dart';
+import 'package:ezshare/Riderscreens/screens/riderridecompletefeedback.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../Providers/messageprovider.dart';
+import 'package:http/http.dart' as http;
 
 class CustomerBookCard extends StatefulWidget {
   final String customername;
   final String vehiclemodel;
+  final String vehiclename;
+  final String vehicle;
   final int seats;
   final String time;
   final String date;
@@ -20,7 +32,15 @@ class CustomerBookCard extends StatefulWidget {
   final String imageurl;
   final String usercontact;
   final String rideid;
+  final String ridername;
   final bool afterstart;
+  final bool ridestart;
+  final List<Location> sourcelist;
+  final List<Location> destinationlist;
+  final int userlength;
+  final double distance;
+  final int usertime;
+  final double fare;
   const CustomerBookCard(
       {super.key,
       required this.customername,
@@ -35,7 +55,17 @@ class CustomerBookCard extends StatefulWidget {
       required this.imageurl,
       required this.usercontact,
       required this.rideid,
-      required this.afterstart});
+      required this.afterstart,
+      required this.ridername,
+      required this.ridestart,
+      required this.sourcelist,
+      required this.destinationlist,
+      required this.userlength,
+      required this.distance,
+      required this.usertime,
+      required this.vehiclename,
+      required this.fare,
+      required this.vehicle});
 
   @override
   State<CustomerBookCard> createState() => _CustomerBookCardState();
@@ -47,11 +77,15 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
   String roomid = "";
   bool isarrived = false, isstart = false;
   bool isaccept = false;
+  double latitude = 0.0, longitude = 0.0, distance = 0.0, fare = 0.0;
+  String useraddress = "", startdate = "";
+  int time = 0;
   @override
   void initState() {
     super.initState();
     ridearrivedcheck();
     ridestartcheck();
+    rideaccpetcheck(); 
   }
 
   createchatroom() async {
@@ -101,6 +135,104 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
         }
       });
     });
+  }
+
+   rideaccpetcheck() {
+    rides.doc(widget.rideid).snapshots().listen((event) {
+      Map<String, dynamic> ridesaccpeted = event["Rideracceptedcustomer"];
+      setState(() {
+        try {
+          isaccept = ridesaccpeted.containsKey(widget.receiveid);
+             
+        } catch (e) {
+          isaccept = false;
+        }
+      });
+    });
+  }
+  Future<Map<String, dynamic>> fetchRouteData(String apiKey, double startLat,
+      double startLng, double endLat, double endLng) async {
+    String apiUrl =
+        "https://maps.googleapis.com/maps/api/directions/json?origin=$startLat,$startLng&destination=$endLat,$endLng&key=$apiKey";
+    http.Response response = await http.get(Uri.parse(apiUrl));
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = jsonDecode(response.body);
+      return data;
+    } else {
+      throw Exception('Failed to fetch route data');
+    }
+  }
+
+  double getDistanceFromRoute(Map<String, dynamic> routeData) {
+    double distanceInKilometers = 0.0;
+    try {
+      int distanceInMeters =
+          routeData['routes'][0]['legs'][0]['distance']['value'];
+      distanceInKilometers = distanceInMeters / 1000;
+    } catch (e) {
+      print(e);
+    }
+    return distanceInKilometers;
+  }
+
+  int getTimeFromRoute(Map<String, dynamic> routeData) {
+    int timeInSeconds = 0;
+    try {
+      timeInSeconds = routeData['routes'][0]['legs'][0]['duration']['value'];
+    } catch (e) {
+      print(e);
+    }
+
+    return timeInSeconds;
+  }
+
+  loaddata() async {
+    await getusercurrentposition().then((value) async {
+      latitude = value.latitude;
+      longitude = value.longitude;
+
+      var addresses = await placemarkFromCoordinates(latitude, longitude);
+
+      var first = addresses.first;
+      var last = addresses.last;
+
+      useraddress = "${first.name} ${last.street}";
+      List<Location> locationsstartuser =
+          await locationFromAddress(widget.startingpoint.toString());
+
+      Map<String, dynamic> routeData = await fetchRouteData(
+          "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk",
+          locationsstartuser.first.latitude,
+          locationsstartuser.first.longitude,
+          latitude,
+          longitude);
+
+      distance = getDistanceFromRoute(routeData).ceilToDouble();
+      time = (getTimeFromRoute(routeData) / 60).round();
+
+      if (distance > widget.distance) {
+        fare = ((widget.vehiclename == "Bike")
+            ? distance * 15 * widget.seats
+            : (widget.vehiclename == "Car")
+                ? distance * 25 * widget.seats
+                : (widget.vehiclename == "Suv")
+                    ? distance * 40 * widget.seats
+                    : distance * 0 * widget.seats);
+      } else {
+        fare = widget.fare;
+      }
+    });
+  }
+
+  Future<Position> getusercurrentposition() async {
+    await Geolocator.requestPermission()
+        .then((value) {})
+        .onError((error, stackTrace) async {
+      await Geolocator.requestPermission();
+    });
+
+    return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
   }
 
   @override
@@ -390,7 +522,7 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                       ? MainAxisAlignment.center
                       : MainAxisAlignment.spaceAround,
                   children: [
-                    (isarrived == false)
+                    (isarrived == false && isstart == false)
                         ? Container(
                             height: 33,
                             width: 106,
@@ -427,6 +559,9 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                                     rides.doc(widget.rideid).update({
                                       "users.${widget.receiveid}.start": true,
                                     });
+                                    setState(() {
+                                      startdate = DateTime.now().toString();
+                                    });
                                   },
                                   child: Center(
                                     child: Container(
@@ -446,7 +581,43 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                                   color: Colors.blue,
                                 ),
                                 child: InkWell(
-                                  onTap: () {},
+                                  onTap: () async {
+                                    await loaddata();
+                                    // await rides.doc(widget.rideid).update({
+                                    //   "users.${widget.receiveid}.end": true,
+                                    // });
+
+                                    // ignore: use_build_context_synchronously
+                                    await Navigator.push(
+                                        context,
+                                        PageTransition(
+                                            type: PageTransitionType
+                                                .leftToRightWithFade,
+                                            child:
+                                                RiderRideCompleteFeedbackScreen(
+                                              seats: widget.seats,
+                                              vehicle: widget.vehiclename,
+                                              numberPlate: widget.vehiclemodel,
+                                              vehicleName: widget.vehicle,
+                                              startdate: startdate,
+                                              time: time,
+                                              distance: widget.distance,
+                                              cardid: widget.rideid,
+                                              customername: widget.customername,
+                                              destinationlist:
+                                                  widget.destinationlist,
+                                              endpoint: widget.endpoint,
+                                              fare: fare.toInt(),
+                                              imageurl: widget.imageurl,
+                                              ridername: widget.ridername,
+                                              sourcelist: widget.sourcelist,
+                                              startingpoint:
+                                                  widget.startingpoint,
+                                              userid: widget.receiveid,
+                                              userlength: widget.userlength,
+                                              riderid: widget.senderid,
+                                            )));
+                                  },
                                   child: Center(
                                     child: Container(
                                         alignment: Alignment.center,
@@ -466,7 +637,32 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                               color: Colors.blue,
                             ),
                             child: InkWell(
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          CustomerCancelTripScreen(
+                                        destinationlist: widget.destinationlist,
+                                        sourcelist: widget.sourcelist,
+                                        userlength: widget.userlength,
+                                        arrived: isarrived,
+                                        ridestart: widget.ridestart,
+                                        date: widget.date,
+                                        endpoint: widget.endpoint,
+                                        imageurl: widget.imageurl,
+                                        rideid: widget.rideid,
+                                        riderid: widget.senderid,
+                                        ridername: widget.ridername,
+                                        seats: widget.seats,
+                                        startingpoint: widget.startingpoint,
+                                        time: widget.time,
+                                        userid: widget.receiveid,
+                                        username: widget.customername,
+                                        vehiclemodel: widget.vehiclemodel,
+                                      ),
+                                    ));
+                              },
                               child: Center(
                                 child: Container(
                                     alignment: Alignment.center,
@@ -480,85 +676,71 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                         : Container(),
                   ],
                 )
-              : (isaccept == false)? Row(
-                  mainAxisAlignment: (isstart)
-                      ? MainAxisAlignment.center
-                      : MainAxisAlignment.spaceAround,
-                  children: [
-                    Container(
-                      height: 33,
-                      width: 106,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(7),
-                        color: Colors.blue,
-                      ),
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            
-                          isaccept = true;
-                          });
-                        },
-                        child: Center(
-                          child: Container(
-                              alignment: Alignment.center,
-                              child: const Text(
-                                "Accept",
-                                style: TextStyle(color: Colors.white),
-                              )),
+              : (isaccept == false)
+                  ? Row(
+                      mainAxisAlignment: (isstart)
+                          ? MainAxisAlignment.center
+                          : MainAxisAlignment.spaceAround,
+                      children: [
+                        Container(
+                          height: 33,
+                          width: 106,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(7),
+                            color: Colors.blue,
+                          ),
+                          child: InkWell(
+                            onTap: () async {
+                              await rides.doc(widget.rideid).update({
+                                "Rideracceptedcustomer": {
+                                  widget.receiveid: true
+                                }
+                              });
+                              setState(() {
+                                isaccept = true;
+                              });
+                            },
+                            child: Center(
+                              child: Container(
+                                  alignment: Alignment.center,
+                                  child: const Text(
+                                    "Accept",
+                                    style: TextStyle(color: Colors.white),
+                                  )),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    Container(
-                      height: 33,
-                      width: 106,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(7),
-                        color: Colors.blue,
-                      ),
-                      child: InkWell(
-                        onTap: () {},
-                        child: Center(
-                          child: Container(
-                              alignment: Alignment.center,
-                              child: const Text(
-                                "Reject",
-                                style: TextStyle(color: Colors.white),
-                              )),
-                        ),
-                      ),
+                        Container(
+                          height: 33,
+                          width: 106,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(7),
+                            color: Colors.blue,
+                          ),
+                          child: InkWell(
+                            onTap: () async {
+                              await rides.doc(widget.rideid).update({
+                                "users.${widget.receiveid}": FieldValue.delete()
+                              });
+                            },
+                            child: Center(
+                              child: Container(
+                                  alignment: Alignment.center,
+                                  child: const Text(
+                                    "Reject",
+                                    style: TextStyle(color: Colors.white),
+                                  )),
+                            ),
+                          ),
+                        )
+                      ],
                     )
-                  ],
-                ) : Row(
-                  mainAxisAlignment: (isstart)
-                      ? MainAxisAlignment.center
-                      : MainAxisAlignment.spaceAround,
-                  children: [
-                    (isarrived == false)
-                        ? Container(
-                            height: 33,
-                            width: 106,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(7),
-                              color: Colors.blue,
-                            ),
-                            child: InkWell(
-                              onTap: () {
-                                rides.doc(widget.rideid).update({
-                                  "users.${widget.receiveid}.arrived": true,
-                                });
-                              },
-                              child: Center(
-                                child: Container(
-                                    alignment: Alignment.center,
-                                    child: const Text(
-                                      "Arrived",
-                                      style: TextStyle(color: Colors.white),
-                                    )),
-                              ),
-                            ),
-                          )
-                        : (isstart == false)
+                  : Row(
+                      mainAxisAlignment: (isstart)
+                          ? MainAxisAlignment.center
+                          : MainAxisAlignment.spaceAround,
+                      children: [
+                        (isarrived == false)
                             ? Container(
                                 height: 33,
                                 width: 106,
@@ -569,20 +751,105 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                                 child: InkWell(
                                   onTap: () {
                                     rides.doc(widget.rideid).update({
-                                      "users.${widget.receiveid}.start": true,
+                                      "users.${widget.receiveid}.arrived": true,
                                     });
                                   },
                                   child: Center(
                                     child: Container(
                                         alignment: Alignment.center,
                                         child: const Text(
-                                          "Start",
+                                          "Arrived",
                                           style: TextStyle(color: Colors.white),
                                         )),
                                   ),
                                 ),
                               )
-                            : Container(
+                            : (isstart == false)
+                                ? Container(
+                                    height: 33,
+                                    width: 106,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(7),
+                                      color: Colors.blue,
+                                    ),
+                                    child: InkWell(
+                                      onTap: () {
+                                        rides.doc(widget.rideid).update({
+                                          "users.${widget.receiveid}.start":
+                                              true,
+                                        });
+                                      },
+                                      child: Center(
+                                        child: Container(
+                                            alignment: Alignment.center,
+                                            child: const Text(
+                                              "Start",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            )),
+                                      ),
+                                    ),
+                                  )
+                                : Container(
+                                    height: 33,
+                                    width: 106,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(7),
+                                      color: Colors.blue,
+                                    ),
+                                    child: InkWell(
+                                      onTap: () async {
+                                        await loaddata();
+                                        // await rides.doc(widget.rideid).update({
+                                        //   "users.${widget.receiveid}.end": true,
+                                        // });
+
+                                        // ignore: use_build_context_synchronously
+                                        await Navigator.push(
+                                            context,
+                                            PageTransition(
+                                                type: PageTransitionType
+                                                    .leftToRightWithFade,
+                                                child:
+                                                    RiderRideCompleteFeedbackScreen(
+                                                  seats: widget.seats,
+                                                  vehicle: widget.vehiclename,
+                                                  numberPlate:
+                                                      widget.vehiclemodel,
+                                                  vehicleName: widget.vehicle,
+                                                  startdate: startdate,
+                                                  time: time,
+                                                  distance: widget.distance,
+                                                  cardid: widget.rideid,
+                                                  customername:
+                                                      widget.customername,
+                                                  destinationlist:
+                                                      widget.destinationlist,
+                                                  endpoint: widget.endpoint,
+                                                  fare: fare.toInt(),
+                                                  imageurl: widget.imageurl,
+                                                  ridername: widget.ridername,
+                                                  sourcelist: widget.sourcelist,
+                                                  startingpoint:
+                                                      widget.startingpoint,
+                                                  userid: widget.receiveid,
+                                                  userlength: widget.userlength,
+                                                  riderid: widget.senderid,
+                                                )));
+                                      },
+                                      child: Center(
+                                        child: Container(
+                                            alignment: Alignment.center,
+                                            child: const Text(
+                                              "End",
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            )),
+                                      ),
+                                    ),
+                                  ),
+                        (isstart == false)
+                            ? Container(
                                 height: 33,
                                 width: 106,
                                 decoration: BoxDecoration(
@@ -590,40 +857,46 @@ class _CustomerBookCardState extends State<CustomerBookCard> {
                                   color: Colors.blue,
                                 ),
                                 child: InkWell(
-                                  onTap: () {},
+                                  onTap: () {
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              CustomerCancelTripScreen(
+                                            destinationlist:
+                                                widget.destinationlist,
+                                            sourcelist: widget.sourcelist,
+                                            userlength: widget.userlength,
+                                            arrived: isarrived,
+                                            ridestart: widget.ridestart,
+                                            date: widget.date,
+                                            endpoint: widget.endpoint,
+                                            imageurl: widget.imageurl,
+                                            rideid: widget.rideid,
+                                            riderid: widget.senderid,
+                                            ridername: widget.ridername,
+                                            seats: widget.seats,
+                                            startingpoint: widget.startingpoint,
+                                            time: widget.time,
+                                            userid: widget.receiveid,
+                                            username: widget.customername,
+                                            vehiclemodel: widget.vehiclemodel,
+                                          ),
+                                        ));
+                                  },
                                   child: Center(
                                     child: Container(
                                         alignment: Alignment.center,
                                         child: const Text(
-                                          "End",
+                                          "Cencel",
                                           style: TextStyle(color: Colors.white),
                                         )),
                                   ),
                                 ),
-                              ),
-                    (isstart == false)
-                        ? Container(
-                            height: 33,
-                            width: 106,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(7),
-                              color: Colors.blue,
-                            ),
-                            child: InkWell(
-                              onTap: () {},
-                              child: Center(
-                                child: Container(
-                                    alignment: Alignment.center,
-                                    child: const Text(
-                                      "Cencel",
-                                      style: TextStyle(color: Colors.white),
-                                    )),
-                              ),
-                            ),
-                          )
-                        : Container(),
-                  ],
-                )
+                              )
+                            : Container(),
+                      ],
+                    )
         ],
       ),
     );

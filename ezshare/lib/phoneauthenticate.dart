@@ -1,5 +1,4 @@
 import 'package:ezshare/otpauthenticate.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,14 +12,11 @@ class PhoneAuthenticateScreen extends StatefulWidget {
 }
 
 class _PhoneAuthenticateScreenState extends State<PhoneAuthenticateScreen> {
-  FirebaseAuth auth = FirebaseAuth.instance; 
+  FirebaseAuth auth = FirebaseAuth.instance;
   @override
   void initState() {
-   
     super.initState();
-   
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -34,18 +30,20 @@ class _PhoneAuthenticateScreenState extends State<PhoneAuthenticateScreen> {
             const SizedBox(
               height: 100,
             ),
-            Container(
-              height: 40,
-              margin: const EdgeInsets.symmetric(vertical: 0),
-              padding: const EdgeInsets.all(0),
-              child: const Icon(
-                CupertinoIcons.car_detailed,
-                color: Color.fromARGB(255, 0, 157, 207),
-                size: 60,
+            SizedBox(
+              width: 320,
+              child: Text(
+                "Enter Your",
+                textAlign: TextAlign.left,
+                style: GoogleFonts.poppins(
+                    color: Colors.black,
+                    fontSize: 40,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 2),
               ),
             ),
             Text(
-              "Ezshare",
+              "Phone Number",
               style: GoogleFonts.poppins(
                   color: const Color.fromARGB(255, 0, 157, 207),
                   fontSize: 40,
@@ -89,21 +87,19 @@ class _PhoneAuthenticateScreenState extends State<PhoneAuthenticateScreen> {
             ),
             InkWell(
                 onTap: () async {
-                  if (phonenum.text.isNotEmpty) { 
-                     await auth.verifyPhoneNumber(
-                      
-                      phoneNumber: phonenum.text,
+                  String formatedphonenumber =
+                      "+92${phonenum.text.toString().substring(1)}"; 
+                  if (phonenum.text.isNotEmpty) {
+                    await auth.verifyPhoneNumber(
+                      phoneNumber: formatedphonenumber,
                       verificationCompleted: (_) {},
-                      verificationFailed: (error) {
-                       
-                      },
+                      verificationFailed: (error) {},
                       codeSent: (verificationId, forceResendingToken) {
-                        
                         Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => OtpauthenticatePage(
-                                phonenum: phonenum.text.toString(),
+                                phonenum: formatedphonenumber,
                                 otpcode: forceResendingToken.toString(),
                                 verificationId: verificationId,
                               ),

@@ -2,11 +2,41 @@
 
 import 'package:ezshare/Riderscreens/widgets/customerfeedbackcard.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 class RiderRideCompleteFeedbackScreen extends StatefulWidget {
-  const RiderRideCompleteFeedbackScreen({super.key});
+  final String customername;
+  final String startingpoint;
+  final String endpoint;
+  final String userid;
+  final String imageurl;
+  final String ridername;
+  final String riderid;
+  final List<Location> sourcelist;
+  final List<Location> destinationlist;
+  final int userlength;
+  final int fare;
+  final String cardid;
+  final double distance;
+  final int time;
+  final String startdate;
+  final String vehicleName;
+  final String numberPlate;
+  final String vehicle;
+  final int seats;
+  const RiderRideCompleteFeedbackScreen(
+      {super.key,
+      required this.customername,
+      required this.startingpoint,
+      required this.endpoint,
+      required this.userid,
+      required this.imageurl,
+      required this.ridername,
+      required this.sourcelist,
+      required this.destinationlist,
+      required this.userlength,
+      required this.fare, required this.cardid, required this.riderid, required this.distance, required this.time, required this.startdate, required this.vehicleName, required this.numberPlate, required this.vehicle, required this.seats});
 
   @override
   State<RiderRideCompleteFeedbackScreen> createState() =>
@@ -17,7 +47,6 @@ class _RiderRideCompleteFeedbackScreenState
     extends State<RiderRideCompleteFeedbackScreen> {
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
         appBar: AppBar(
           elevation: 5,
@@ -46,7 +75,9 @@ class _RiderRideCompleteFeedbackScreenState
                     )
                   ]),
               child: IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
                   icon: const Icon(
                     Icons.arrow_back_ios,
                     size: 20,
@@ -55,7 +86,6 @@ class _RiderRideCompleteFeedbackScreenState
         body: SingleChildScrollView(
           physics: const ScrollPhysics(),
           child: Column(
-           
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Center(
@@ -88,7 +118,7 @@ class _RiderRideCompleteFeedbackScreenState
                     ]),
               ),
               const SizedBox(
-                height: 50,
+                height: 30,
               ),
               Text(
                 "Thank You!",
@@ -103,18 +133,37 @@ class _RiderRideCompleteFeedbackScreenState
                 height: 10,
               ),
               SizedBox(
-                  height: 438,
+                height: 450,
                 width: 300,
                 child: ListView.builder(
-                 
-                 
                   scrollDirection: Axis.horizontal,
-                  itemCount: 3,
+                  itemCount: 1,
                   itemBuilder: (context, index) {
-                  return const CustomerFeedbackCard();
-                },),
+
+                    return CustomerFeedbackCard(
+                      seats: widget.seats,
+                      vehicleName: widget.vehicleName,
+                      vehicle: widget.vehicle ,
+                      numberPlate: widget.numberPlate ,
+                      startdate: widget.startdate,
+                      time: widget.time,
+                      distance: widget.distance,
+                      riderid: widget.riderid,
+                      cardid: widget.cardid,
+                      customername: widget.customername,
+                      destinationlist: widget.destinationlist,
+                      endpoint: widget.endpoint,
+                      fare: widget.fare,
+                      imageurl: widget.imageurl,
+                      ridername: widget.ridername,
+                      sourcelist: widget.sourcelist,
+                      startingpoint: widget.startingpoint,
+                      userid: widget.userid,
+                      userlength: widget.userlength,
+                    );
+                  },
+                ),
               )
-             
             ],
           ),
         ));

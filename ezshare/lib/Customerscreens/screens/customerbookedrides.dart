@@ -5,6 +5,9 @@ import 'package:ezshare/Customerscreens/screens/customerhomedrawer.dart';
 import 'package:ezshare/Customerscreens/widgets/ride_card.dart';
 import 'package:ezshare/Customerscreens/widgets/search_field.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../Providers/searchprovider.dart';
 
 class CustomerBookedRidesScreen extends StatefulWidget {
   final String userid;
@@ -19,6 +22,7 @@ class _CustomerBookedRidesScreenState extends State<CustomerBookedRidesScreen> {
   CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
   CollectionReference users = FirebaseFirestore.instance.collection("Users");
   String imageurl = "";
+    double rating = 0;
    String getuserimage(String userid) 
   {
     users.doc(userid).get().then((value) async{
@@ -31,8 +35,20 @@ class _CustomerBookedRidesScreenState extends State<CustomerBookedRidesScreen> {
     } );
      return imageurl;
   }
+   double ratingcalculate(String riderid)
+  { 
+     users.doc(riderid).snapshots().listen((event) { 
+      setState(() {
+        
+      rating = event["Rating"] / event["Rides"];
+      });
+     });
+     
+   return rating;
+  }
   @override
   Widget build(BuildContext context) {
+     final searchprovider = Provider.of<SearchProvider>(context);
     return Scaffold(
       appBar: AppBar(
               backgroundColor: Colors.white,
@@ -68,7 +84,7 @@ class _CustomerBookedRidesScreenState extends State<CustomerBookedRidesScreen> {
           child: SizedBox(
             width: double.infinity,
             child: StreamBuilder(
-                stream: rides.where("Riderid",isNotEqualTo: widget.userid).snapshots(),
+                stream:  rides.where("Riderid",isNotEqualTo: widget.userid).snapshots(),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
@@ -81,15 +97,46 @@ class _CustomerBookedRidesScreenState extends State<CustomerBookedRidesScreen> {
                           snapshot.data!.docs[index];
                         Map<String, dynamic> users = ridesdetails["users"];
                      
-                        
-                         
-                      return  (users.keys.contains(widget.userid))? Center(
+
+                     if(ridesdetails["DestinationLocation"].toString().startsWith(searchprovider.searchval) && searchprovider.searchval.isNotEmpty)
+                     {
+                    
+                        return  (users.keys.contains(widget.userid))? Center(
                         child: Container(
                           margin: const EdgeInsets.all(10),
                           height: 230,
                           width: 270,
                           child: rideCard(
-                          
+                            rating: double.parse(ratingcalculate(ridesdetails["Riderid"]).toStringAsFixed(1)) ,
+                            riderid: ridesdetails["Riderid"],
+                            vehiclename: ridesdetails["Vehicle"],
+                            usersdata: ridesdetails["users"],
+                            imageurl: ridesdetails["imageurl"],
+                            date: ridesdetails['SelectedDate'],
+                            endpoint: ridesdetails['DestinationLocation'],
+                            ridername: ridesdetails['Ridername'],
+                            seats: ridesdetails['Seats'],
+                            startingpoint: ridesdetails['SourceLocation'],
+                            time: ridesdetails['SelectedTime'],
+                            vehiclemodel: ridesdetails['VehicleName'],
+                            rideid: ridesdetails.id,
+                            userid: widget.userid,
+                            username: widget.username,
+                            vehicleplatenumber: ridesdetails['VehicleNumber'],
+                          ),
+                        ),
+                      ) : const Center();
+                     }
+                    
+                        
+                         
+                      return  (users.keys.contains(widget.userid) && searchprovider.searchval.isEmpty)? Center(
+                        child: Container(
+                          margin: const EdgeInsets.all(10),
+                          height: 230,
+                          width: 270,
+                          child: rideCard(
+                            rating: double.parse(ratingcalculate(ridesdetails["Riderid"]).toStringAsFixed(1)) ,
                             riderid: ridesdetails["Riderid"],
                             vehiclename: ridesdetails["Vehicle"],
                             usersdata: ridesdetails["users"],

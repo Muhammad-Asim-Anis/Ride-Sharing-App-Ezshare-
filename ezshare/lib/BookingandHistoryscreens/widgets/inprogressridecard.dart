@@ -2,21 +2,29 @@
 
 import 'package:flutter/material.dart';
 
-class HistoryCard extends StatefulWidget {
-  final String startdate;
-  final String userstartlocation;
-  final String userendlocation;
-  final String endtime;
-  final int totaltime;
-  final int cost; 
-
-  const HistoryCard({super.key, required this.startdate, required this.userstartlocation, required this.userendlocation, required this.endtime, required this.totaltime, required this.cost});
+class InProgressRideCard extends StatefulWidget {
+  final String userid;
+  final String username;
+  final String ridername;
+  final String vehiclemodel;
+  final String vehicleplatenumber;
+  final int seats;
+  final String time;
+  final String date;
+  final String startingpoint;
+  final String endpoint;
+  final String rideid;
+  final String imageurl;
+  final Map<String, dynamic> usersdata;
+  final String vehiclename;
+  final String riderid;
+  const InProgressRideCard({super.key, required this.userid, required this.username, required this.ridername, required this.vehiclemodel, required this.vehicleplatenumber, required this.seats, required this.time, required this.date, required this.startingpoint, required this.endpoint, required this.rideid, required this.imageurl, required this.usersdata, required this.vehiclename, required this.riderid});
 
   @override
-  State<HistoryCard> createState() => _HistoryCardState();
+  State<InProgressRideCard> createState() => _InProgressRideCardState();
 }
 
-class _HistoryCardState extends State<HistoryCard> {
+class _InProgressRideCardState extends State<InProgressRideCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -79,20 +87,20 @@ class _HistoryCardState extends State<HistoryCard> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children:  [
+                  children: [
                     const SizedBox(
                       height: 13,
                     ),
                     Text(
-                      widget.startdate,
+                      "${widget.date}, ${widget.time}",
                       style:
                           const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                     SizedBox(
-                      width: 200,
+                      width: 250,
                       height: 20,
                       child: Text(
-                       widget.userstartlocation,
+                        widget.startingpoint,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
@@ -100,23 +108,18 @@ class _HistoryCardState extends State<HistoryCard> {
                       ),
                     ),
                     const SizedBox(
-                      height: 30,
+                      height: 55,
                     ),
                     SizedBox(
                       width: 200,
                       height: 20,
                       child: Text(
-                        widget.endtime,
-                        style:
-                            const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                        widget.endpoint,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: Colors.blue),
                       ),
-                    ),
-                    Text(
-                     widget.userendlocation,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: Colors.blue),
                     ),
                   ],
                 ),
@@ -131,73 +134,15 @@ class _HistoryCardState extends State<HistoryCard> {
                         height: 13,
                       ),
                       Text(
-                        "Completed",
+                        "In-Progress",
                         style: TextStyle(
-                            color: Color.fromARGB(255, 41, 143, 45),
+                            color: Colors.blueAccent,
                             fontWeight: FontWeight.bold,
                             fontSize: 15),
                       ),
                     ],
                   ))),
-          Expanded(
-              flex: 2,
-              child: Container(
-                  child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    color: const Color.fromARGB(255, 92, 92, 92),
-                    height: 110,
-                    width: 0.3,
-                  ),
-                  const SizedBox(
-                    width: 10,
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children:  [
-                     const Text(
-                        "Travel Time",
-                        style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12),
-                      ),
-                      const SizedBox(
-                        height: 7,
-                      ),
-                      Text(
-                        "${widget.totaltime} Min",
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(
-                        height: 18,
-                      ),
-                      const Text(
-                        "Travel Cost",
-                        style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(
-                        height: 7,
-                      ),
-                      Text(
-                        "Rs: ${widget.cost}",
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ],
-              ))),
+         
         ],
       ),
     );

@@ -3,7 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CustomerRideCompleteFeedbackScreen extends StatefulWidget {
-  const CustomerRideCompleteFeedbackScreen({super.key});
+   final String imageurl;
+  final String userid;
+  final String username;
+  final String cardid;
+  final String ridername;
+  final String riderid;
+  final int fare;
+  const CustomerRideCompleteFeedbackScreen({super.key, required this.imageurl, required this.userid, required this.username, required this.cardid, required this.ridername, required this.riderid, required this.fare});
 
   @override
   State<CustomerRideCompleteFeedbackScreen> createState() => _CustomerRideCompleteFeedbackScreenState();
@@ -12,6 +19,7 @@ class CustomerRideCompleteFeedbackScreen extends StatefulWidget {
 class _CustomerRideCompleteFeedbackScreenState extends State<CustomerRideCompleteFeedbackScreen> {
   @override
   Widget build(BuildContext context) {
+ 
     return Scaffold(
         appBar: AppBar(
           elevation: 5,
@@ -40,7 +48,10 @@ class _CustomerRideCompleteFeedbackScreenState extends State<CustomerRideComplet
                     )
                   ]),
               child: IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pop(context);
+                   
+                  },
                   icon: const Icon(
                     Icons.arrow_back_ios,
                     size: 20,
@@ -96,7 +107,14 @@ class _CustomerRideCompleteFeedbackScreenState extends State<CustomerRideComplet
               const SizedBox(
                 height: 10,
               ),
-              const RiderFeedbackCard()
+               RiderFeedbackCard(
+                fare: widget.fare ,
+                cardid: widget.cardid,
+                  imageurl:widget.imageurl ,
+                  riderid: widget.riderid,
+                  ridername: widget.ridername,
+                  userid: widget.userid,
+                  username: widget.username,)
              
             ],
           ),

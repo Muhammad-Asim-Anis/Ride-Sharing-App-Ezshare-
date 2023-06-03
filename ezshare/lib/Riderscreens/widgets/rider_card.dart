@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_unnecessary_containers
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezshare/Riderscreens/screens/riderridedetailview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ class RiderCard extends StatefulWidget {
   final String startingpoint;
   final String endpoint;
   final String cardid;
-  final Map<String, dynamic> usersData; 
+  final Map<String, dynamic> usersData;
   final String imageurl;
   const RiderCard(
       {super.key,
@@ -30,13 +31,16 @@ class RiderCard extends StatefulWidget {
       required this.endpoint,
       required this.userid,
       required this.username,
-      required this.cardid, required this.usersData, required this.imageurl});
+      required this.cardid,
+      required this.usersData,
+      required this.imageurl});
 
   @override
   State<RiderCard> createState() => _RiderCardState();
 }
 
 class _RiderCardState extends State<RiderCard> {
+  CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
   @override
   Widget build(BuildContext context) {
     // print(widget.imageurl);
@@ -67,26 +71,29 @@ class _RiderCardState extends State<RiderCard> {
             child: Row(
               children: [
                 Container(
-                    margin: const EdgeInsets.all(0),
-                    height: 50,
-                    width: 47,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                    ),
-                    child: (widget.imageurl.isNotEmpty)?  CircleAvatar(
-                      backgroundImage: NetworkImage(
-                        widget.imageurl,
-                      ),
-                    ): Container(
-                        padding: EdgeInsets.zero,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(100)),
-                        child: const Icon(
-                          CupertinoIcons.person_circle,
-                          color: Colors.white,
-                          size: 50,
+                  margin: const EdgeInsets.all(0),
+                  height: 50,
+                  width: 47,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                  ),
+                  child: (widget.imageurl.isNotEmpty)
+                      ? CircleAvatar(
+                          backgroundImage: NetworkImage(
+                            widget.imageurl,
+                          ),
+                        )
+                      : Container(
+                          padding: EdgeInsets.zero,
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(100)),
+                          child: const Icon(
+                            CupertinoIcons.person_circle,
+                            color: Colors.white,
+                            size: 50,
+                          ),
                         ),
-                      ),) ,
+                ),
                 Container(
                   margin: const EdgeInsets.only(left: 10, top: 5),
                   child: Column(
@@ -171,7 +178,6 @@ class _RiderCardState extends State<RiderCard> {
                 ),
               ),
               Container(
-                
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -209,7 +215,6 @@ class _RiderCardState extends State<RiderCard> {
                       ),
                     ),
                     Container(
-                      
                       margin: const EdgeInsets.only(top: 5, bottom: 2),
                       child: const Text(
                         "Ending point",
@@ -252,7 +257,7 @@ class _RiderCardState extends State<RiderCard> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Text(
-                  "Seat Avaliable: ${widget.seats}",
+                  "Seat Avaliable: ${widget.seats - widget.usersData.length}",
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                   ),
@@ -291,12 +296,12 @@ class _RiderCardState extends State<RiderCard> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => RiderRideDetailViewScreen(
-                            
                               userid: widget.userid,
                               username: widget.username,
                               cardid: widget.cardid,
                               destinationlist: locationsdestination,
-                              sourcelist: locationssource, userlength: widget.usersData.length,
+                              sourcelist: locationssource,
+                              userlength: widget.usersData.length,
                             ),
                           ));
                     },
@@ -323,7 +328,9 @@ class _RiderCardState extends State<RiderCard> {
                     color: Colors.blue,
                   ),
                   child: InkWell(
-                    onTap: () {},
+                    onTap: () async {
+                      await rides.doc(widget.cardid).delete();
+                    },
                     child: Center(
                       child: Container(
                           alignment: Alignment.center,

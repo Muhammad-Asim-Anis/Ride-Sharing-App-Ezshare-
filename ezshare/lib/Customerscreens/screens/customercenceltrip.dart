@@ -1,12 +1,12 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:ezshare/Customerscreens/screens/cutomer_home.dart';
+import 'package:ezshare/Customerscreens/screens/customerbookedrides.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:page_transition/page_transition.dart';
 
 class RiderCancelTripScreen extends StatefulWidget {
-  final String userid;
+   final String userid;
   final String username;
   final String ridername;
   final String vehiclemodel;
@@ -22,48 +22,24 @@ class RiderCancelTripScreen extends StatefulWidget {
   final String userstartpoint;
   final String userendpoint;
   final String riderid;
-  final bool ridestart;
-  final bool arrived;
-
-  const RiderCancelTripScreen(
-      {super.key,
-      required this.userid,
-      required this.username,
-      required this.ridername,
-      required this.vehiclemodel,
-      required this.vehicleplatenumber,
-      required this.seats,
-      required this.time,
-      required this.date,
-      required this.startingpoint,
-      required this.endpoint,
-      required this.rideid,
-      required this.imageurl,
-      required this.vehiclename,
-      required this.userstartpoint,
-      required this.userendpoint,
-      required this.riderid,
-      required this.ridestart,
-      required this.arrived});
+  const RiderCancelTripScreen({super.key, required this.userid, required this.username, required this.ridername, required this.vehiclemodel, required this.vehicleplatenumber, required this.seats, required this.time, required this.date, required this.startingpoint, required this.endpoint, required this.rideid, required this.imageurl, required this.vehiclename, required this.userstartpoint, required this.userendpoint, required this.riderid});
 
   @override
   State<RiderCancelTripScreen> createState() => _RiderCancelTripScreenState();
 }
 
 class _RiderCancelTripScreenState extends State<RiderCancelTripScreen> {
-  CollectionReference wallet =
-      FirebaseFirestore.instance.collection("Wallet_Recipt");
-  CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
-  CollectionReference users = FirebaseFirestore.instance.collection("Users");
   List<String> canceltrip = [
     "Waiting for a long time",
-    "Rider isn’t there",
+    "Customer isn’t there",
     "Wrong address",
-    "Rider didn’t response",
+    "Customer didn’t response",
     "Cacelling myself",
     "Other",
   ];
-  List<bool> canceltripclicks = [false, false, false, false, false, false];
+  List<bool> canceltripclicks = [
+    false,false,false,false,false,false
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +69,7 @@ class _RiderCancelTripScreenState extends State<RiderCancelTripScreen> {
                 ))),
       ),
       body: Container(
-        margin: const EdgeInsets.only(top: 20, left: 10, bottom: 10),
+        margin: const EdgeInsets.only(top: 20, left: 10,bottom: 10),
         child: Column(
           children: [
             Expanded(
@@ -105,14 +81,17 @@ class _RiderCancelTripScreenState extends State<RiderCancelTripScreen> {
                   return InkWell(
                     onTap: () {
                       setState(() {
-                        if (canceltripclicks[index] == false) {
+                        if(canceltripclicks[index] == false)
+                        {
                           canceltripclicks[index] = true;
-                        } else {
+                        }
+                        else{
                           canceltripclicks[index] = false;
                         }
+                      
                       });
                     },
-                    splashColor: Colors.white,
+                   splashColor: Colors.white,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 20),
                       child: Column(
@@ -173,63 +152,32 @@ class _RiderCancelTripScreenState extends State<RiderCancelTripScreen> {
               ),
             ),
             InkWell(
-                onTap: () async {
-                  await wallet.doc().set({
-                    "Userstartlocation": widget.userstartpoint,
-                    "Userendlocation": widget.userendpoint,
-                    "userId": widget.userid,
-                    "Name": widget.username,
-                    "id": widget.riderid,
-                    "username": widget.ridername,
-                    "Amount": 0,
-                    "participants": [widget.userid, widget.riderid],
-                    "Fare": (widget.ridestart == false)
-                        ? 0
-                        : (widget.ridestart && widget.arrived == false)
-                            ? 5
-                            : (widget.ridestart && widget.arrived)
-                                ? 10
-                                : 0,
-                    "Check": "Penalty",
-                    "Cencel by": "Customer Cancel",
-                    "message": canceltrip[canceltripclicks.indexOf(true)],
-                    "Date": DateTime.now().toString(),
-                  });
-                  await users
-                      .doc(widget.riderid)
-                      .update({"Rides": FieldValue.increment(1)});
-
-                  await rides
-                      .doc(widget.rideid)
-                      .update({"users.${widget.userid}": FieldValue.delete()});
-
-                  // ignore: use_build_context_synchronously
-                  Navigator.push(
-                      context,
-                      PageTransition(
-                          type: PageTransitionType.rightToLeftWithFade,
-                          child: customerhome(
-                              userid: widget.userid,
-                              username: widget.username)));
-                },
-                hoverColor: Colors.white,
-                child: Center(
-                  child: Container(
-                      decoration: BoxDecoration(
-                          color: Colors.blueAccent,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.blue, width: 1)),
-                      width: 287,
-                      height: 63,
+                      onTap: () async {
+                        Navigator.push(
+                            context,
+                            PageTransition(
+                                type: PageTransitionType.rightToLeftWithFade,
+                                child: CustomerBookedRidesScreen(userid: widget.userid, username: widget.username) ));
+                      },
+                      hoverColor: Colors.white,
                       child: Center(
-                        child: Text(
-                          "Done",
-                          style: GoogleFonts.poppins(
-                              fontSize: 20, color: Colors.white),
-                          textAlign: TextAlign.center,
-                        ),
-                      )),
-                ))
+                        child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.blueAccent,
+                                borderRadius: BorderRadius.circular(10),
+                                border:
+                                    Border.all(color: Colors.blue, width: 1)),
+                            width: 287,
+                            height: 63,
+                            child: Center(
+                              child: Text(
+                                "Done",
+                                style: GoogleFonts.poppins(
+                                    fontSize: 20, color: Colors.white),
+                                textAlign: TextAlign.center,
+                              ),
+                            )),
+                      ))
           ],
         ),
       ),

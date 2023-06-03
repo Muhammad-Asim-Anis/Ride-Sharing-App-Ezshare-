@@ -1,6 +1,5 @@
 import 'package:ezshare/successlogin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -48,24 +47,24 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(
                 height: 100,
               ),
-              Container(
-                height: 40,
-                margin: const EdgeInsets.symmetric(vertical: 0),
-                padding: const EdgeInsets.all(0),
-                child: const Icon(
-                  CupertinoIcons.car_detailed,
-                  color: Color.fromARGB(255, 0, 157, 207),
-                  size: 60,
-                ),
-              ),
-              Text(
-                "Ezshare",
+              SizedBox( width: 320,
+              child: Text(
+                "Enter Your",textAlign: TextAlign.left,
                 style: GoogleFonts.poppins(
-                    color: const Color.fromARGB(255, 0, 157, 207),
+                    color:  Colors.black,
                     fontSize: 40,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 2),
               ),
+            ),
+            Text(
+              "Name",
+              style: GoogleFonts.poppins(
+                  color: const Color.fromARGB(255, 0, 157, 207),
+                  fontSize: 40,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 2),
+            ),
               const SizedBox(
                 height: 50,
               ),

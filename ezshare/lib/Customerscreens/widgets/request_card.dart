@@ -28,6 +28,7 @@ class RequestRideCard extends StatefulWidget {
   final Map<String, dynamic> usersdata;
   final String vehiclename;
   final String riderid;
+  final double rating;
   const RequestRideCard(
       {super.key,
       required this.ridername,
@@ -44,7 +45,7 @@ class RequestRideCard extends StatefulWidget {
       required this.imageurl,
       required this.usersdata,
       required this.vehiclename,
-      required this.riderid});
+      required this.riderid, required this.rating});
 
   @override
   State<RequestRideCard> createState() => _RequestRideCardState();

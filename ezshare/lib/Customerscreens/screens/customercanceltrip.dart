@@ -1,26 +1,67 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:ezshare/Riderscreens/screens/riderridedetailview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CustomerCancelTripScreen extends StatefulWidget {
-  const CustomerCancelTripScreen({super.key});
+  final String userid;
+  final String username;
+  final String ridername;
+  final String vehiclemodel;
+  final int seats;
+  final String time;
+  final String date;
+  final String startingpoint;
+  final String endpoint;
+  final String rideid;
+  final String imageurl;
+  final bool ridestart;
+  final bool arrived;
+  final String riderid;
+  final List<Location> sourcelist;
+  final List<Location> destinationlist;
+  final int userlength;
+  const CustomerCancelTripScreen(
+      {super.key,
+      required this.userid,
+      required this.username,
+      required this.ridername,
+      required this.vehiclemodel,
+      required this.seats,
+      required this.time,
+      required this.date,
+      required this.startingpoint,
+      required this.endpoint,
+      required this.rideid,
+      required this.imageurl,
+      required this.riderid,
+      required this.ridestart,
+      required this.arrived,
+      required this.sourcelist,
+      required this.destinationlist,
+      required this.userlength});
 
   @override
-  State<CustomerCancelTripScreen> createState() => _CustomerCancelTripScreenState();
+  State<CustomerCancelTripScreen> createState() =>
+      _CustomerCancelTripScreenState();
 }
 
 class _CustomerCancelTripScreenState extends State<CustomerCancelTripScreen> {
- List<String> canceltrip = [
+  CollectionReference wallet =
+      FirebaseFirestore.instance.collection("Wallet_Recipt");
+  CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
+  CollectionReference users = FirebaseFirestore.instance.collection("Users");
+  List<String> canceltrip = [
     "Waiting for a long time",
-    "Rider isn’t there",
+    "Customer isn’t there",
     "Wrong address",
-    "Rider didn’t Pick",
+    "Customer didn’t Pick",
     "Cacelling myself",
     "Other",
   ];
-  List<bool> canceltripclicks = [
-    true,false,false,false,false,false
-  ];
+  List<bool> canceltripclicks = [false, false, false, false, false, false];
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +81,9 @@ class _CustomerCancelTripScreenState extends State<CustomerCancelTripScreen> {
             width: 10,
             height: 10,
             child: IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pop(context);
+                },
                 icon: const Icon(
                   CupertinoIcons.multiply,
                   size: 30,
@@ -48,7 +91,7 @@ class _CustomerCancelTripScreenState extends State<CustomerCancelTripScreen> {
                 ))),
       ),
       body: Container(
-        margin: const EdgeInsets.only(top: 20, left: 10,bottom: 10),
+        margin: const EdgeInsets.only(top: 20, left: 10, bottom: 10),
         child: Column(
           children: [
             Expanded(
@@ -60,17 +103,14 @@ class _CustomerCancelTripScreenState extends State<CustomerCancelTripScreen> {
                   return InkWell(
                     onTap: () {
                       setState(() {
-                        if(canceltripclicks[index] == false)
-                        {
+                        if (canceltripclicks[index] == false) {
                           canceltripclicks[index] = true;
-                        }
-                        else{
+                        } else {
                           canceltripclicks[index] = false;
                         }
-                      
                       });
                     },
-                   splashColor: Colors.white,
+                    splashColor: Colors.white,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 20),
                       child: Column(
@@ -131,37 +171,68 @@ class _CustomerCancelTripScreenState extends State<CustomerCancelTripScreen> {
               ),
             ),
             InkWell(
-                      onTap: () async {
-                        // Navigator.push(
-                        //     context,
-                        //     PageTransition(
-                        //         type: PageTransitionType.rightToLeftWithFade,
-                        //         child: RiderRideCreateInfoScreen(
-                        //           destinationlocation: destinationlocation.text,
-                        //           sourcelocation: sourcelocation.text,
-                        //           userid: widget.userid,
-                        //           username: widget.username,
-                        //         )));
-                      },
-                      hoverColor: Colors.white,
+                onTap: () async {
+                  await wallet.doc().set({
+                    "Userstartlocation": widget.startingpoint,
+                    "Userendlocation": widget.endpoint,
+                    "userId": widget.riderid,
+                    "Name": widget.ridername,
+                    "id" : widget.userid,
+                    "username" : widget.username,
+                    "Seat booked" : widget.seats,
+                    "Amount": 0,
+                    "participants" : [widget.userid,widget.riderid],
+                    "Fare": (widget.ridestart == false)
+                        ? 0
+                        : (widget.ridestart && widget.arrived == false)
+                            ? 5
+                            : (widget.ridestart && widget.arrived)
+                                ? 10
+                                : 0,
+                    "Check": "Penalty", 
+                    "Cencel by" : "Rider Cancel",
+                    "message": canceltrip[canceltripclicks.indexOf(true)],
+                    "Date": DateTime.now().toString(),
+                  });
+                    await users
+                      .doc(widget.userid)
+                      .update({"Rides": FieldValue.increment(1)});
+                  // await rides
+                  //     .doc(widget.rideid)
+                  //     .update({"users.${widget.userid}": FieldValue.delete()});
+
+                  // ignore: use_build_context_synchronously
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RiderRideDetailViewScreen(
+                          userid: widget.userid,
+                          username: widget.username,
+                          cardid: widget.rideid,
+                          destinationlist: widget.destinationlist,
+                          sourcelist: widget.sourcelist,
+                          userlength: widget.userlength,
+                        ),
+                      ));
+                },
+                hoverColor: Colors.white,
+                child: Center(
+                  child: Container(
+                      decoration: BoxDecoration(
+                          color: Colors.blueAccent,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.blue, width: 1)),
+                      width: 287,
+                      height: 63,
                       child: Center(
-                        child: Container(
-                            decoration: BoxDecoration(
-                                color: Colors.blueAccent,
-                                borderRadius: BorderRadius.circular(10),
-                                border:
-                                    Border.all(color: Colors.blue, width: 1)),
-                            width: 287,
-                            height: 63,
-                            child: Center(
-                              child: Text(
-                                "Done",
-                                style: GoogleFonts.poppins(
-                                    fontSize: 20, color: Colors.white),
-                                textAlign: TextAlign.center,
-                              ),
-                            )),
-                      ))
+                        child: Text(
+                          "Done",
+                          style: GoogleFonts.poppins(
+                              fontSize: 20, color: Colors.white),
+                          textAlign: TextAlign.center,
+                        ),
+                      )),
+                ))
           ],
         ),
       ),

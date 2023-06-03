@@ -1,19 +1,20 @@
 import 'package:ezshare/BookingandHistoryscreens/screens/cencelrides.dart';
 import 'package:ezshare/BookingandHistoryscreens/screens/completedrides.dart';
+import 'package:ezshare/BookingandHistoryscreens/screens/inprogressridesrider.dart';
 import 'package:flutter/material.dart';
-import 'package:ezshare/BookingandHistoryscreens/screens/inprogressrides.dart';
 
-class HistoryScreen extends StatefulWidget {
+
+class HistoryRiderScreen extends StatefulWidget {
   final String userid;
   final String username;
-  const HistoryScreen(
+  const HistoryRiderScreen(
       {super.key, required this.userid, required this.username});
 
   @override
-  State<HistoryScreen> createState() => _HistoryScreenState();
+  State<HistoryRiderScreen> createState() => _HistoryRiderScreenState();
 }
 
-class _HistoryScreenState extends State<HistoryScreen> {
+class _HistoryRiderScreenState extends State<HistoryRiderScreen> {
   TabBar get _tabbar => const TabBar(
         labelColor: Colors.black, //<-- selected text color
         unselectedLabelColor: Colors.grey,
@@ -70,7 +71,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           body: TabBarView(children: [
             CompletedRidesScreen(
                 userid: widget.userid, username: widget.username),
-            InprogressRidesScreen(
+            InprogressRidesRiderScreen(
                 userid: widget.userid, username: widget.username),
             CancelRidesScreen(userid: widget.userid, username: widget.username)
           ]),

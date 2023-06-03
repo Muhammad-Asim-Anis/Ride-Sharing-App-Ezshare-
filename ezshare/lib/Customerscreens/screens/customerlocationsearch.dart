@@ -1,37 +1,67 @@
 import 'dart:convert';
+
+import 'package:ezshare/Customerscreens/screens/customerrequestbooking.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:google_map_polyline_new/google_map_polyline_new.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'package:ezshare/Riderscreens/screens/riderdestination.dart';
-import 'package:ezshare/Riderscreens/screens/riderridecreateinfo.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
+import '../../Providers/googlemapprovider.dart';
+import '../../Riderscreens/screens/custommarker.dart';
 
-import '../../Providers/ridecreateprovider.dart';
-
-class RiderDestinationSerachScreen extends StatefulWidget {
-  final String username;
+class CustomerLocationSerachScreen extends StatefulWidget {
+  final String imageurl;
   final String userid;
-  const RiderDestinationSerachScreen(
-      {super.key, required this.username, required this.userid});
+  final String username;
+  final String cardid;
+  final String ridername;
+  final String vehiclemodel;
+  final String vehicleplatenumber;
+  final int seats;
+  final String time;
+  final String date;
+  final String startingpoint;
+  final String endpoint;
+  final LatLng startlatlong;
+  final LatLng endlatlong;
+  final String vehiclename;
+  final Map<String, dynamic> userdata;
+  final String riderid;
+  const CustomerLocationSerachScreen(
+      {super.key,
+      required this.username,
+      required this.userid,
+      required this.imageurl,
+      required this.cardid,
+      required this.ridername,
+      required this.vehiclemodel,
+      required this.vehicleplatenumber,
+      required this.seats,
+      required this.time,
+      required this.date,
+      required this.startingpoint,
+      required this.endpoint,
+      required this.startlatlong,
+      required this.endlatlong,
+      required this.vehiclename,
+      required this.userdata,
+      required this.riderid});
 
   @override
-  State<RiderDestinationSerachScreen> createState() =>
-      _RiderDestinationSerachScreenState();
+  State<CustomerLocationSerachScreen> createState() =>
+      _CustomerLocationSerachScreenState();
 }
 
-class _RiderDestinationSerachScreenState
-    extends State<RiderDestinationSerachScreen> {
+class _CustomerLocationSerachScreenState
+    extends State<CustomerLocationSerachScreen> {
   List<dynamic> places = [];
   bool setloading = false;
-  TextEditingController sourcelocation =
-      TextEditingController(text: RiderRideCreateInfoScreen.sourcelocat);
-  TextEditingController destinationlocation =
-      TextEditingController(text: RiderRideCreateInfoScreen.destinationlocat);
+  TextEditingController sourcelocation = TextEditingController();
+  TextEditingController destinationlocation = TextEditingController();
+  Uint8List? usermarkerstartimage, usermarkerendimage;
   bool source = false, destination = false;
   var uuid = const Uuid();
   String _sessiontoken = "122344";
@@ -94,7 +124,7 @@ class _RiderDestinationSerachScreenState
 
   @override
   Widget build(BuildContext context) {
-    final ridecreateprovider = Provider.of<RideCreateProvider>(context);
+    final googlemapprovider = Provider.of<GoogleMapProvider>(context);
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 237, 237, 237),
       appBar: AppBar(
@@ -120,12 +150,26 @@ class _RiderDestinationSerachScreenState
                 onPressed: () {
                   Navigator.push(
                       context,
-                      PageTransition(
-                          type: PageTransitionType.rightToLeftWithFade,
-                          child: RiderDestinationSetScreen(
+                      MaterialPageRoute(
+                        builder: (context) => CustomerRequestBookingScreen(
+                            username: widget.startingpoint,
                             userid: widget.userid,
-                            username: widget.username,
-                          )));
+                            imageurl: widget.imageurl,
+                            cardid: widget.cardid,
+                            ridername: widget.ridername,
+                            vehiclemodel: widget.vehiclemodel,
+                            vehicleplatenumber: widget.vehicleplatenumber,
+                            seats: widget.seats,
+                            time: widget.time,
+                            date: widget.date,
+                            startingpoint: widget.startingpoint,
+                            endpoint: widget.endpoint,
+                            startlatlong: widget.startlatlong,
+                            endlatlong: widget.endlatlong,
+                            vehiclename: widget.vehiclename,
+                            userdata: widget.userdata,
+                            riderid: widget.riderid),
+                      ));
                 },
                 icon: const Icon(
                   Icons.arrow_back_ios,
@@ -190,7 +234,6 @@ class _RiderDestinationSerachScreenState
                         destination = false;
                         source = true;
                         await placessearch(sourcelocation.text);
-                       
                       },
                     ),
                   ),
@@ -253,58 +296,99 @@ class _RiderDestinationSerachScreenState
                   ),
                   InkWell(
                       onTap: () async {
-                        List<LatLng> polylines = [];
-                        GoogleMapPolyline googleMapPolyline = GoogleMapPolyline(
-                            apiKey: "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk");
-
-                        setloading = true;
-                        ridecreateprovider
-                            .setSourceLocation(sourcelocation.text.toString());
-                        ridecreateprovider.setDestinationLocation(
+                        double startpointlat = 0.0,
+                            startpointlong = 0.0,
+                            endpointlat = 0.0,
+                            endpointlong = 0.0;
+                        List<Location> source = await locationFromAddress(
+                            sourcelocation.text.toString());
+                        List<Location> destination = await locationFromAddress(
                             destinationlocation.text.toString());
-                        List<Location> locationssource =
-                            await locationFromAddress(
-                                sourcelocation.text.toString());
+                        await CustomMarkerMaker()
+                            .custommarkerfromasset(
+                                "assets/images/startingpointmarker.png",
+                                100,
+                                100)
+                            .then((value) => usermarkerstartimage = value);
+                        await CustomMarkerMaker()
+                            .custommarkerfromasset(
+                                "assets/images/endpointmarker.png", 100, 100)
+                            .then((value) => usermarkerendimage = value);
+                        if (!googlemapprovider.pickup) {
+                          googlemapprovider.markers.add(Marker(
+                              icon: BitmapDescriptor.fromBytes(
+                                  usermarkerstartimage!),
+                              markerId: const MarkerId("4"),
+                              position: LatLng(
+                                  source.last.latitude, source.last.longitude),
+                              infoWindow: const InfoWindow(
+                                  title: "Customer Source Location")));
 
-                        List<Location> locationsdestination =
-                            await locationFromAddress(
-                                destinationlocation.text.toString());
+                          googlemapprovider.setStartingaddress(
+                              sourcelocation.text.toString());
+                          googlemapprovider.setpickup();
+                        }
+                        if (!googlemapprovider.dropoff) {
+                          googlemapprovider.markers.add(Marker(
+                              icon: BitmapDescriptor.fromBytes(
+                                  usermarkerendimage!),
+                              markerId: const MarkerId("5"),
+                              position: LatLng(destination.last.latitude,
+                                  destination.last.longitude),
+                              infoWindow: const InfoWindow(
+                                  title: "Customer Destination Location")));
 
-                        polylines =
-                            (await googleMapPolyline.getCoordinatesWithLocation(
-                          origin: LatLng(locationssource.last.latitude,
-                              locationssource.last.longitude),
-                          destination: LatLng(
-                              locationsdestination.last.latitude,
-                              locationsdestination.last.longitude),
-                          mode: RouteMode.driving,
-                        ))!;
+                          googlemapprovider
+                              .setEndaddress(destinationlocation.text);
+                          googlemapprovider.setdropoff();
 
-                        Map<String, dynamic> routeData = await fetchRouteData(
-                            "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk",
-                            locationssource.last.latitude,
-                            locationssource.last.longitude,
-                            locationsdestination.last.latitude,
-                            locationsdestination.last.longitude);
+                          for (var element in googlemapprovider.markers) {
+                            if (element.markerId.value == "4") {
+                              startpointlat = element.position.latitude;
+                              startpointlong = element.position.longitude;
+                            }
+                            if (element.markerId.value == "5") {
+                              endpointlat = element.position.latitude;
+                              endpointlong = element.position.longitude;
+                            }
+                          }
 
-                        double distance = getDistanceFromRoute(routeData);
-                        double time = getTimeFromRoute(routeData) / 60;
-
-                        setloading = false;
+                          Map<String, dynamic> routeData = await fetchRouteData(
+                              "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk",
+                              startpointlat,
+                              startpointlong,
+                              endpointlat,
+                              endpointlong);
+                          googlemapprovider
+                              .setDistance(getDistanceFromRoute(routeData));
+                          googlemapprovider
+                              .setTime(getTimeFromRoute(routeData));
+                        }
                         // ignore: use_build_context_synchronously
                         await Navigator.push(
                             context,
-                            PageTransition(
-                                type: PageTransitionType.rightToLeftWithFade,
-                                child: RiderRideCreateInfoScreen(
-                                  destinationlocation: destinationlocation.text,
-                                  sourcelocation: sourcelocation.text,
-                                  userid: widget.userid,
-                                  username: widget.username,
-                                  destinationlist: locationsdestination,
-                                  sourcelist: locationssource,
-                                  polylines: polylines, distance: distance.ceilToDouble(), time: time.round(),
-                                )));
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  CustomerRequestBookingScreen(
+                                      username: widget.startingpoint,
+                                      userid: widget.userid,
+                                      imageurl: widget.imageurl,
+                                      cardid: widget.cardid,
+                                      ridername: widget.ridername,
+                                      vehiclemodel: widget.vehiclemodel,
+                                      vehicleplatenumber:
+                                          widget.vehicleplatenumber,
+                                      seats: widget.seats,
+                                      time: widget.time,
+                                      date: widget.date,
+                                      startingpoint: widget.startingpoint,
+                                      endpoint: widget.endpoint,
+                                      startlatlong: widget.startlatlong,
+                                      endlatlong: widget.endlatlong,
+                                      vehiclename: widget.vehiclename,
+                                      userdata: widget.userdata,
+                                      riderid: widget.riderid),
+                            ));
                       },
                       hoverColor: Colors.white,
                       child: Center(

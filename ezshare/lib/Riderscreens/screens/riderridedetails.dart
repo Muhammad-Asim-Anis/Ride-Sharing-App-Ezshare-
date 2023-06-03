@@ -40,7 +40,8 @@ class _RiderRideBookingDeatilsScreenState
         ),
       ),
       body: StreamBuilder(
-          stream: rides.snapshots(),
+         
+          stream:  rides.where("Riderid",isEqualTo: widget.userid).snapshots(),
           builder: (context, snapshot) {
             
              

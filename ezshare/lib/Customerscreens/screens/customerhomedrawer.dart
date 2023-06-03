@@ -182,7 +182,7 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
                   Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const  HistoryScreen(),
+                          builder: (context) =>   HistoryScreen(userid: widget.userid,username: widget.username),
                         ));
                 },
                 leading: const Icon(
@@ -238,7 +238,7 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
                  Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const  WalletScreen(),
+                          builder: (context) =>   WalletScreen(userid: widget.userid ,username: widget.username ),
                         ));
                 },
                 leading: const Icon(
@@ -264,7 +264,7 @@ class _CustomerHomeDrawerState extends State<CustomerHomeDrawer> {
                      Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const  ContactUsScreen(),
+                          builder: (context) =>   ContactUsScreen(userid: widget.userid,username: widget.username),
                         ));
         
                 },

@@ -1,5 +1,7 @@
 
+import 'package:ezshare/Providers/searchprovider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 
 class SearchField extends StatefulWidget {
@@ -10,9 +12,11 @@ class SearchField extends StatefulWidget {
 }
 
 class _SearchFieldState extends State<SearchField> {
+  TextEditingController search = TextEditingController(); 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    final searchprovider = Provider.of<SearchProvider>(context);
+    return TextField(controller: search,
       decoration: InputDecoration(
         enabledBorder: OutlineInputBorder(
           borderSide:
@@ -24,6 +28,9 @@ class _SearchFieldState extends State<SearchField> {
         hintText: "Find Here",
         // prefixIcon: Icon(CupertinoIcons.search),
       ),
+      onChanged: (value) {
+        searchprovider.setSearchvalue(value);
+      },
     );
   }
 }

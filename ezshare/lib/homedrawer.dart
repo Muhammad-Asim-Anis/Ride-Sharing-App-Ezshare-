@@ -1,4 +1,7 @@
+import 'package:ezshare/BookingandHistoryscreens/screens/history_screen_rider.dart';
+
 import 'package:ezshare/Customerscreens/screens/cutomer_home.dart';
+import 'package:ezshare/Riderscreens/screens/ridercontactus.dart';
 import 'package:ezshare/Riderscreens/screens/riderdestination.dart';
 import 'package:ezshare/Riderscreens/screens/riderridedetails.dart';
 import 'package:ezshare/aftersplashscreen.dart';
@@ -8,6 +11,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+
 
 class HomeDrawer extends StatefulWidget {
   final String userid;
@@ -128,7 +133,11 @@ class _HomeDrawerState extends State<HomeDrawer> {
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(10),border: Border.all(color: Colors.black)),
             child:  ListTile(
               onTap: () {
-                
+             Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>  RiderDestinationSetScreen(userid: widget.userid,username: widget.username),
+                      ));
               },
                 leading: const Icon(
                   CupertinoIcons.home,
@@ -146,10 +155,10 @@ class _HomeDrawerState extends State<HomeDrawer> {
             child: ListTile(
                 onTap: () {
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>  RiderDestinationSetScreen(userid: widget.userid,username: widget.username),
-                      ));
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>   HistoryRiderScreen(userid: widget.userid,username: widget.username),
+                        ));
                 },
                 leading: const Icon(
                   Icons.history,
@@ -179,23 +188,27 @@ class _HomeDrawerState extends State<HomeDrawer> {
                   style: TextStyle(color: Colors.black),
                 )),
           ),
-          Container(
-             margin: const EdgeInsets.only(left: 20,right: 20,bottom: 10),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10),border: Border.all(color: Colors.black)),
-            child: ListTile(
-                onTap: () {
-                  // Navigator.pushNamed(context, '/Products');
-                },
-                leading: const Icon(
-                  Icons.account_balance_wallet_outlined,
-                  color: Color.fromARGB(225, 0, 157, 207),
-                ),
-                trailing: const Icon(Icons.arrow_forward_ios_outlined,color: Colors.black,),
-                title: const Text(
-                  "Wallet",
-                  style: TextStyle(color: Colors.black),
-                )),
-          ),
+          // Container(
+          //    margin: const EdgeInsets.only(left: 20,right: 20,bottom: 10),
+          //   decoration: BoxDecoration(borderRadius: BorderRadius.circular(10),border: Border.all(color: Colors.black)),
+          //   child: ListTile(
+          //       onTap: () {
+          //          Navigator.push(
+          //               context,
+          //               MaterialPageRoute(
+          //                 builder: (context) =>   WalletScreen(userid: widget.userid ,username: widget.username ),
+          //               ));
+          //       },
+          //       leading: const Icon(
+          //         Icons.account_balance_wallet_outlined,
+          //         color: Color.fromARGB(225, 0, 157, 207),
+          //       ),
+          //       trailing: const Icon(Icons.arrow_forward_ios_outlined,color: Colors.black,),
+          //       title: const Text(
+          //         "Wallet",
+          //         style: TextStyle(color: Colors.black),
+          //       )),
+          // ),
           Container(
              margin: const EdgeInsets.only(left: 20,right: 20,bottom: 10),
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(10),border: Border.all(color: Colors.black)),
@@ -222,7 +235,11 @@ class _HomeDrawerState extends State<HomeDrawer> {
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(10),border: Border.all(color: Colors.black)),
             child: ListTile(
                 onTap: () {
-                  // Navigator.pushNamed(context, '/Register');
+                   Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>   RiderContactUsScreen(userid: widget.userid,username: widget.username),
+                        ));
                 },
                 leading: const Icon(
                   CupertinoIcons.phone,
@@ -242,7 +259,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
              });
             },
             child: Container(
-              margin: const EdgeInsets.only(top: 35),
+              margin: const EdgeInsets.only(top: 100),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

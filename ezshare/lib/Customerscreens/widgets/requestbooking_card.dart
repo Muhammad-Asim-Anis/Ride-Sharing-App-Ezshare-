@@ -925,7 +925,11 @@ class _CustomerRequestBookingCardState
                             "drop off": googlemapprovider.endaddress.toString(),
                             "pickup":
                                 googlemapprovider.startingaddress.toString(),
-                            "afterstart": (DynamicRidesDetailScreen.isridestart) ? true : false
+                            "distance":
+                                googlemapprovider.distance.ceilToDouble(),
+                            "afterstart": (DynamicRidesDetailScreen.isridestart)
+                                ? true
+                                : false
                           }
                         };
                         Map<String, dynamic> userdata = {
@@ -961,8 +965,12 @@ class _CustomerRequestBookingCardState
                                   googlemapprovider.endaddress.toString(),
                               "pickup":
                                   googlemapprovider.startingaddress.toString(),
+                              "distance":
+                                  googlemapprovider.distance.ceilToDouble(),
                               "afterstart":
-                                  (DynamicRidesDetailScreen.isridestart)? true : false
+                                  (DynamicRidesDetailScreen.isridestart)
+                                      ? true
+                                      : false
                             }
                           }
                         };

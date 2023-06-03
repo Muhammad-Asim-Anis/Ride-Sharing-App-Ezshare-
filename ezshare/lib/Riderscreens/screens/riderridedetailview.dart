@@ -6,6 +6,7 @@ import 'package:ezshare/Riderscreens/widgets/customer_card.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:google_map_polyline_new/google_map_polyline_new.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
@@ -41,10 +42,23 @@ class _RiderRideDetailViewScreenState extends State<RiderRideDetailViewScreen> {
       startlongitude = 0.0,
       endlatitude = 0.0,
       endlongitude = 0.0;
+  List<LatLng> polylines = [];
   @override
   void initState() {
     super.initState();
     loadmarker();
+    loadpolyline();
+  }
+
+  loadpolyline() async {
+    GoogleMapPolyline googleMapPolyline =
+        GoogleMapPolyline(apiKey: "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk");
+    polylines = (await googleMapPolyline.getCoordinatesWithLocation(
+      origin: LatLng(startlatitude, startlongitude),
+      destination: LatLng(endlatitude, endlongitude),
+      mode: RouteMode.driving,
+    ))!;
+    setState(() {});
   }
 
   loadmarker() {
@@ -110,7 +124,7 @@ class _RiderRideDetailViewScreenState extends State<RiderRideDetailViewScreen> {
           startlongitude = widget.sourcelist.last.longitude;
           endlatitude = widget.destinationlist.last.latitude;
           endlongitude = widget.destinationlist.last.longitude;
-
+          await loadpolyline();
           final GoogleMapController googleMapController =
               await controller.future;
           googleMapController.animateCamera(CameraUpdate.newCameraPosition(
@@ -153,13 +167,10 @@ class _RiderRideDetailViewScreenState extends State<RiderRideDetailViewScreen> {
         },
         polylines: <Polyline>{
           Polyline(
-            polylineId: const PolylineId('polyline_1'),
-            color: Colors.blue,
-            points: <LatLng>[
-              LatLng(startlatitude, startlongitude),
-              LatLng(endlatitude, endlongitude)
-            ],
-          )
+              width: 5,
+              polylineId: const PolylineId('polyline_1'),
+              color: Colors.blue,
+              points: polylines)
         },
       ),
       bottomNavigationBar: DraggableScrollableSheet(
@@ -179,6 +190,7 @@ class _RiderRideDetailViewScreenState extends State<RiderRideDetailViewScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 String riderid = snapshot.data!.get("Riderid");
+                String ridername = snapshot.data!.get("Ridername");
                 Map<String, dynamic> users = snapshot.data!.get("users");
                 bool ridestart;
                 try {
@@ -188,68 +200,70 @@ class _RiderRideDetailViewScreenState extends State<RiderRideDetailViewScreen> {
                 }
                 return Column(
                   children: [
-                    (widget.userlength != 0)
-                        ? Align(
-                            alignment: Alignment.topRight,
-                            child: (ridestart != true)
-                                ? InkWell(
-                                    onTap: () async {
-                                      await rides
-                                          .doc(widget.cardid)
-                                          .update({"ridestart": true});
-                                    },
-                                    child: Container(
-                                        width: 100,
-                                        height: 40,
-                                        margin:
-                                            const EdgeInsets.only(right: 20),
-                                        decoration: BoxDecoration(
-                                            color: Colors.blueAccent,
-                                            borderRadius:
-                                                BorderRadius.circular(100),
-                                            boxShadow: const [
-                                              BoxShadow(
-                                                color:
-                                                    Color.fromARGB(50, 0, 0, 0),
-                                                spreadRadius: 0,
-                                                blurRadius: 4,
-                                                offset: Offset(0, 4),
-                                              )
-                                            ]),
-                                        child: const Center(
-                                          child: Text("On my way",
-                                              style: TextStyle(
-                                                  color: Colors.white)),
-                                        )),
-                                  )
-                                : InkWell(
-                                    onTap: () async {},
-                                    child: Container(
-                                        width: 100,
-                                        height: 40,
-                                        margin:
-                                            const EdgeInsets.only(right: 20),
-                                        decoration: BoxDecoration(
-                                            color: Colors.blueAccent,
-                                            borderRadius:
-                                                BorderRadius.circular(100),
-                                            boxShadow: const [
-                                              BoxShadow(
-                                                color:
-                                                    Color.fromARGB(50, 0, 0, 0),
-                                                spreadRadius: 0,
-                                                blurRadius: 4,
-                                                offset: Offset(0, 4),
-                                              )
-                                            ]),
-                                        child: const Center(
-                                          child: Text("end",
-                                              style: TextStyle(
-                                                  color: Colors.white)),
-                                        )),
-                                  ),
-                          )
-                        : Container(),
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: (ridestart != true)
+                          ? InkWell(
+                              onTap: () async {
+                                await rides
+                                    .doc(widget.cardid)
+                                    .update({"ridestart": true});
+                              },
+                              child: Container(
+                                  width: 100,
+                                  height: 40,
+                                  margin: const EdgeInsets.only(right: 20),
+                                  decoration: BoxDecoration(
+                                      color: Colors.blueAccent,
+                                      borderRadius: BorderRadius.circular(100),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color.fromARGB(50, 0, 0, 0),
+                                          spreadRadius: 0,
+                                          blurRadius: 4,
+                                          offset: Offset(0, 4),
+                                        )
+                                      ]),
+                                  child: const Center(
+                                    child: Text("On my way",
+                                        style: TextStyle(color: Colors.white)),
+                                  )),
+                            )
+                          : InkWell(
+                              onTap: () async {
+                               await rides.doc(widget.cardid).delete();
+                                // ignore: use_build_context_synchronously
+                                await Navigator.push(
+                                    context,
+                                    PageTransition(
+                                        type: PageTransitionType
+                                            .rightToLeftWithFade,
+                                        child: RiderRideBookingDeatilsScreen(
+                                          userid: widget.userid,
+                                          username: widget.username,
+                                        )));
+                              },
+                              child: Container(
+                                  width: 100,
+                                  height: 40,
+                                  margin: const EdgeInsets.only(right: 20),
+                                  decoration: BoxDecoration(
+                                      color: Colors.blueAccent,
+                                      borderRadius: BorderRadius.circular(100),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color.fromARGB(50, 0, 0, 0),
+                                          spreadRadius: 0,
+                                          blurRadius: 4,
+                                          offset: Offset(0, 4),
+                                        )
+                                      ]),
+                                  child: const Center(
+                                    child: Text("end",
+                                        style: TextStyle(color: Colors.white)),
+                                  )),
+                            ),
+                    ),
                     Expanded(
                       child: ListView.builder(
                         controller: scrollController,
@@ -297,7 +311,7 @@ class _RiderRideDetailViewScreenState extends State<RiderRideDetailViewScreen> {
                                       startlongitude = start.first.longitude;
                                       endlatitude = end.first.latitude;
                                       endlongitude = end.first.longitude;
-
+                                      await loadpolyline();
                                       final GoogleMapController
                                           googleMapController =
                                           await controller.future;
@@ -312,6 +326,24 @@ class _RiderRideDetailViewScreenState extends State<RiderRideDetailViewScreen> {
                                       setState(() {});
                                     },
                                     child: CustomerBookCard(
+                                      vehicle:
+                                          snapshot.data!.get("VehicleName"),
+                                      fare: users.entries
+                                          .elementAt(index)
+                                          .value["Estimated Fare"],
+                                      vehiclename:
+                                          snapshot.data!.get("Vehicle"),
+                                      distance: users.entries
+                                          .elementAt(index)
+                                          .value["distance"],
+                                      usertime: users.entries
+                                          .elementAt(index)
+                                          .value["Estimated Time"],
+                                      destinationlist: widget.destinationlist,
+                                      sourcelist: widget.sourcelist,
+                                      userlength: widget.userlength,
+                                      ridestart: ridestart,
+                                      ridername: ridername,
                                       afterstart: afterridestart,
                                       rideid: widget.cardid,
                                       usercontact: users.entries

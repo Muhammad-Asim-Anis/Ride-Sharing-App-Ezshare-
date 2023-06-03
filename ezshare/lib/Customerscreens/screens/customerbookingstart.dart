@@ -1,19 +1,15 @@
 import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:ezshare/Customerscreens/screens/customerbookedrides.dart';
-import 'package:ezshare/Customerscreens/screens/cutomer_home.dart';
+import 'package:ezshare/Customerscreens/screens/customerridecompletefeedback.dart';
 import 'package:ezshare/Customerscreens/widgets/messagecard.dart';
-
 import 'package:ezshare/Providers/messageprovider.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:google_map_polyline_new/google_map_polyline_new.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
-
 import '../../Providers/ridestartprovider.dart';
 import '../widgets/ridestart_card.dart';
 
@@ -80,24 +76,59 @@ class _CustomerBookingStartScreenState
   double latitude = 24.91638690588, longitude = 67.05699002225725;
   final Completer<GoogleMapController> controller = Completer();
   CollectionReference rides = FirebaseFirestore.instance.collection("Rides");
-  bool ridestart = false, isarrived = false, isstart = false;
+  bool ridestart = false, isarrived = false, isstart = false, isend = false;
+  List<LatLng> polylines = [];
   @override
   void initState() {
     super.initState();
     riderridestartcheck();
     ridearrivedcheck();
     ridestartcheck();
+    rideendcheck(widget.usersdata["Estimated Fare"]);
+  }
+
+  rideendcheck(double fare) {
+    rides.doc(widget.cardid).snapshots().listen((event) async {
+      Map<String, dynamic> enduser = event["rideendparticipants"];
+
+      try {
+        isend = enduser.containsKey(widget.userid);
+
+        if (isend) {
+          rides.doc(widget.cardid).update({
+            "users.${widget.userid}.start": false,
+          });
+
+          await Navigator.push(
+              context,
+              PageTransition(
+                  type: PageTransitionType.leftToRightWithFade,
+                  child: CustomerRideCompleteFeedbackScreen(
+                    fare: enduser.entries.firstWhere((element) => element.key == widget.userid).value["TotalFare"],
+                    cardid: widget.cardid,
+                    imageurl: widget.imageurl,
+                    riderid: widget.riderid,
+                    ridername: widget.ridername,
+                    userid: widget.userid,
+                    username: widget.username,
+                  )));
+
+          // ignore: use_build_context_synchronously
+        }
+      } catch (e) {
+        isend = false;
+      }
+    });
   }
 
   ridearrivedcheck() {
     rides.doc(widget.cardid).snapshots().listen((event) {
       Map<String, dynamic> users = event["users"];
-      setState(() async{
+      setState(() async {
         try {
-          isarrived =  users.entries
+          isarrived = users.entries
               .firstWhere((element) => element.key == widget.userid)
               .value["arrived"];
-          
         } catch (e) {
           isarrived = false;
         }
@@ -108,21 +139,20 @@ class _CustomerBookingStartScreenState
   ridestartcheck() {
     rides.doc(widget.cardid).snapshots().listen((event) {
       Map<String, dynamic> users = event["users"];
-      setState(()async {
+      setState(() async {
         try {
           isstart = users.entries
               .firstWhere((element) => element.key == widget.userid)
               .value["start"];
-          if(isstart)
-          {
-
-          await rides.doc(widget.cardid).update({
-            "users.${widget.userid}.arrived": false,
-          });
+          if (isstart) {
+            await rides.doc(widget.cardid).update({
+              "users.${widget.userid}.arrived": false,
+            });
           }
         } catch (e) {
           isstart = false;
         }
+        // ignore: use_build_context_synchronously
       });
     });
   }
@@ -131,8 +161,22 @@ class _CustomerBookingStartScreenState
     rides.doc(widget.cardid).snapshots().listen((event) {
       setState(() {
         ridestart = event["ridestart"];
-        
       });
+    });
+  }
+
+  loadpolyline() async {
+    GoogleMapPolyline googleMapPolyline =
+        GoogleMapPolyline(apiKey: "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk");
+    polylines = (await googleMapPolyline.getCoordinatesWithLocation(
+      origin:
+          LatLng(widget.startlatlong.latitude, widget.startlatlong.longitude),
+      destination:
+          LatLng(widget.endlatlong.latitude, widget.endlatlong.longitude),
+      mode: RouteMode.driving,
+    ))!;
+    setState(() {
+      
     });
   }
 
@@ -214,6 +258,8 @@ class _CustomerBookingStartScreenState
         builder: (context, value, child) {
           loadmarkerdata();
           addmarker(value);
+          loadpolyline();
+          // rideendcheck( widget.usersdata["Estimated Fare"]);
           return Stack(
             children: [
               GoogleMap(
@@ -229,11 +275,12 @@ class _CustomerBookingStartScreenState
                 },
                 markers: value.markers.toSet(),
                 polylines: <Polyline>{
-                  Polyline(
-                      polylineId: const PolylineId("1"),
-                      color: Colors.blueAccent,
-                      points: <LatLng>[widget.startlatlong, widget.endlatlong])
-                },
+          Polyline(
+              polylineId: const PolylineId('polyline_id'),
+              points: polylines,
+              color: Colors.blueAccent,
+              width: 4)
+        },
               ),
               (ridestart && isarrived == false && isstart == false)
                   ? Align(
@@ -310,7 +357,7 @@ class _CustomerBookingStartScreenState
                                 )),
                               ),
                             )
-                          : const Align()
+                          : const Align(),
             ],
           );
         },

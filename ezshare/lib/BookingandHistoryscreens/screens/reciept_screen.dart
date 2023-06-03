@@ -1,9 +1,21 @@
 // ignore_for_file: avoid_unnecessary_containers
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class RecieptScreen extends StatefulWidget {
-  const RecieptScreen({super.key});
+  final String startdate;
+  final String userstartlocation;
+  final String userendlocation;
+  final int cost;
+  final String vehicletype;
+  final String vehicleName;
+  final String drivername;
+  final String numberplate;
+  final double distance;
+  final int seats;
+  final int walletdeduction; 
+  const RecieptScreen({super.key, required this.startdate, required this.userstartlocation, required this.userendlocation, required this.cost, required this.vehicletype, required this.vehicleName, required this.drivername, required this.numberplate, required this.distance, required this.seats, required this.walletdeduction});
 
   @override
   State<RecieptScreen> createState() => _RecieptScreenState();
@@ -16,9 +28,21 @@ class _RecieptScreenState extends State<RecieptScreen> {
       appBar: AppBar(
         centerTitle: true,
         backgroundColor: Colors.white,
-        title: const Text(
-          "Jan 12, 12:24 PM",
-          style: TextStyle(
+        leading: SizedBox(
+            width: 10,
+            height: 10,
+            child: IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(
+                  CupertinoIcons.back,
+                  size: 30,
+                  color: Colors.blueAccent,
+                ))),
+        title:  Text(
+         widget.startdate,
+          style: const TextStyle(
               color: Colors.blue, fontSize: 25, fontWeight: FontWeight.bold),
         ),
       ),
@@ -33,8 +57,8 @@ class _RecieptScreenState extends State<RecieptScreen> {
                 child: Column(
                   children: [
                     Row(
-                      children: const [
-                        Expanded(
+                      children:  [
+                        const Expanded(
                             flex: 2,
                             child: Icon(
                               Icons.circle,
@@ -44,8 +68,8 @@ class _RecieptScreenState extends State<RecieptScreen> {
                         Expanded(
                             flex: 8,
                             child: Text(
-                              "Sadar,Karachi",
-                              style: TextStyle(
+                              widget.userstartlocation,
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
                                   color: Colors.black),
@@ -101,8 +125,8 @@ class _RecieptScreenState extends State<RecieptScreen> {
                       ],
                     ),
                     Row(
-                      children: const [
-                        Expanded(
+                      children:  [
+                        const Expanded(
                           flex: 2,
                           child: Icon(
                             Icons.location_on,
@@ -113,8 +137,8 @@ class _RecieptScreenState extends State<RecieptScreen> {
                         Expanded(
                             flex: 8,
                             child: Text(
-                              "Hussainabad,Karachi",
-                              style: TextStyle(
+                              widget.userendlocation,
+                              style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
                                   color: Colors.black),
@@ -132,14 +156,14 @@ class _RecieptScreenState extends State<RecieptScreen> {
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
+                      children:  [
+                        const Text(
                           "Base fare",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "15",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          (widget.vehicletype == "Bike")? "15" : (widget.vehicletype == "Car") ? "25" : (widget.vehicletype == "Suv") ? "40" : "0",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
                     ),
@@ -148,14 +172,14 @@ class _RecieptScreenState extends State<RecieptScreen> {
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children:  [
                         Text(
-                          "Distance(10 KM)",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          "Distance(${widget.distance.toInt()} KM)",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "150",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          "${widget.cost}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
                     ),
@@ -164,30 +188,14 @@ class _RecieptScreenState extends State<RecieptScreen> {
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
-                          "Waiting time(6 min)",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          "12",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 15,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
+                      children:  [
+                        const Text(
                           "Fare",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "177",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                         "${widget.cost}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
                     ),
@@ -196,14 +204,14 @@ class _RecieptScreenState extends State<RecieptScreen> {
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children:  [
                         Text(
-                          "Total fare of Seats(2)",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          "Total fare of Seats(${widget.seats})",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "334",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          "${widget.seats * widget.cost}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
                     ),
@@ -212,14 +220,14 @@ class _RecieptScreenState extends State<RecieptScreen> {
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
+                      children:  [
+                        const Text(
                           "Wallet deduction",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "-10",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          "${widget.walletdeduction}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
                     ),
@@ -235,14 +243,14 @@ class _RecieptScreenState extends State<RecieptScreen> {
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
+                      children:  [
+                         const Text(
                           "Total Fare",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "324",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          "${widget.cost - widget.walletdeduction}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
                     ),
@@ -258,14 +266,14 @@ class _RecieptScreenState extends State<RecieptScreen> {
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
+                      children:  [
+                       const Text(
                           "Driver Name",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "Ahsan",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                         widget.drivername,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
                     ),
@@ -274,14 +282,14 @@ class _RecieptScreenState extends State<RecieptScreen> {
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
+                      children:  [
+                        const Text(
                           "Vehicle",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "Honda",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                         widget.vehicleName,
+                          style:const  TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
                     ),
@@ -290,14 +298,14 @@ class _RecieptScreenState extends State<RecieptScreen> {
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
+                      children:  [
+                        const Text(
                           "Number plate",
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
                         Text(
-                          "KMI-452",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                         widget.numberplate,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         )
                       ],
                     ),

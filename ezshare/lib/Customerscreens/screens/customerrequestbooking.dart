@@ -1,21 +1,23 @@
 import 'dart:async';
-
+import 'dart:convert';
+import 'package:ezshare/Customerscreens/screens/customerlocationsearch.dart';
+import 'package:google_map_polyline_new/google_map_polyline_new.dart';
+import 'package:http/http.dart' as http;
 import 'package:ezshare/Customerscreens/screens/cutomer_home.dart';
 import 'package:ezshare/Customerscreens/widgets/messagecard.dart';
 import 'package:ezshare/Customerscreens/widgets/requestbooking_card.dart';
 import 'package:ezshare/Providers/googlemapprovider.dart';
 import 'package:ezshare/Providers/messageprovider.dart';
 import 'package:ezshare/Riderscreens/screens/custommarker.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 class CustomerRequestBookingScreen extends StatefulWidget {
   final String imageurl;
@@ -35,7 +37,7 @@ class CustomerRequestBookingScreen extends StatefulWidget {
   final String vehiclename;
   final Map<String, dynamic> userdata;
   final String riderid;
-  
+
   const CustomerRequestBookingScreen(
       {super.key,
       required this.userid,
@@ -53,7 +55,8 @@ class CustomerRequestBookingScreen extends StatefulWidget {
       required this.endlatlong,
       required this.imageurl,
       required this.vehiclename,
-      required this.userdata, required this.riderid});
+      required this.userdata,
+      required this.riderid});
 
   @override
   State<CustomerRequestBookingScreen> createState() =>
@@ -67,11 +70,58 @@ class _CustomerRequestBookingScreenState
   double latitude = 24.91638690588, longitude = 67.05699002225725;
   final Completer<GoogleMapController> controller = Completer();
   String useraddress = "";
+  var uuid = const Uuid();
+  String _sessiontoken = "122344";
+  List<dynamic> places = [];
+  bool source = false, destination = false;
+  TextEditingController sourcelocation = TextEditingController();
+  TextEditingController destinationlocation = TextEditingController();
+  List<LatLng> polylines = [];
   @override
   void initState() {
     loaddata();
+    onChange();
     // loadmarker();
     super.initState();
+  }
+
+  loadpolyline() async {
+    GoogleMapPolyline googleMapPolyline =
+        GoogleMapPolyline(apiKey: "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk");
+    polylines = (await googleMapPolyline.getCoordinatesWithLocation(
+      origin:
+          LatLng(widget.startlatlong.latitude, widget.startlatlong.longitude),
+      destination:
+          LatLng(widget.endlatlong.latitude, widget.endlatlong.longitude),
+      mode: RouteMode.driving,
+    ))!;
+    setState(() {});
+  }
+
+  void onChange() {
+    // ignore: unnecessary_null_comparison
+    if (_sessiontoken == null) {
+      setState(() {
+        _sessiontoken = uuid.v4();
+      });
+    }
+  }
+
+  placessearch(String address) async {
+    String placesapi = "AIzaSyCPVtwUwZEhuK351SVc9sZ_cwGYOOvcJJk";
+    String baseurl =
+        "https://maps.googleapis.com/maps/api/place/autocomplete/json";
+    String request =
+        "$baseurl?input=${address}karachi&key=$placesapi&sessiontoken=$_sessiontoken";
+
+    Uri url = Uri.parse(request);
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      setState(() {
+        places = jsonDecode(response.body)["predictions"];
+      });
+    } else {}
   }
 
   loadmarker() {
@@ -227,7 +277,44 @@ class _CustomerRequestBookingScreenState
                     ],
                   ),
                 )),
-          )
+          ),
+          Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: const Color.fromARGB(139, 128, 124, 124)),
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CustomerLocationSerachScreen(
+                            username: widget.startingpoint,
+                            userid: widget.userid,
+                            imageurl: widget.imageurl,
+                            cardid: widget.cardid,
+                            ridername: widget.ridername,
+                            vehiclemodel: widget.vehiclemodel,
+                            vehicleplatenumber: widget.vehicleplatenumber,
+                            seats: widget.seats,
+                            time: widget.time,
+                            date: widget.date,
+                            startingpoint: widget.startingpoint,
+                            endpoint: widget.endpoint,
+                            startlatlong: widget.startlatlong,
+                            endlatlong: widget.endlatlong,
+                            vehiclename: widget.vehiclename,
+                            userdata: widget.userdata,
+                            riderid: widget.riderid),
+                      ));
+                },
+                child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(
+                      Icons.search,
+                      color: Colors.white,
+                    )),
+              ))
         ],
       ),
       body: Stack(
@@ -236,6 +323,7 @@ class _CustomerRequestBookingScreenState
             builder: (context, value, child) {
               loadmarker();
               addmarker(value);
+              loadpolyline();
               return GoogleMap(
                 initialCameraPosition: CameraPosition(
                     target: LatLng(latitude, longitude), zoom: 14.4746),
@@ -253,7 +341,7 @@ class _CustomerRequestBookingScreenState
                   Polyline(
                       polylineId: const PolylineId("1"),
                       color: Colors.blueAccent,
-                      points: <LatLng>[widget.startlatlong,widget.endlatlong])
+                      points: polylines)
                 },
               );
             },
@@ -277,13 +365,14 @@ class _CustomerRequestBookingScreenState
               child: Consumer<MessageCardProvider>(
                 builder: (BuildContext context, value, Widget? child) {
                   return (value.isClick)
-                      ? CustomerMessageCard(reciverid: widget.riderid,
-                        imageurl: widget.imageurl,
+                      ? CustomerMessageCard(
+                          reciverid: widget.riderid,
+                          imageurl: widget.imageurl,
                           senderid: widget.userid,
                           username: widget.username,
                         )
                       : CustomerRequestBookingCard(
-                        riderid: widget.riderid,
+                          riderid: widget.riderid,
                           vehiclename: widget.vehiclename,
                           imageurl: widget.imageurl,
                           date: widget.date,
